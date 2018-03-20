@@ -1,0 +1,55 @@
+<h1 class="ui header">공지사항</h1>
+    <!-- <hr> -->
+
+
+
+
+<%- include('../../modules/searchForm')%>
+
+<table class="ui single line table">
+    <colgroup>
+        <col width="5%">
+        <col width="53%">
+        <col width="10%">
+        <col width="10%">
+        <col width="10%">
+    </colgroup>
+    <thead>
+        <tr>
+            <th>No</th>
+            <th>제목</th>
+            <th style="text-align:center;">등록일</th>
+            <th style="text-align:center;">작성자</th>
+            <th style="text-align:center;">조회수</th>
+        </tr>
+    </thead>
+    <tbody>
+    <% notices.forEach(function(notice, index){ %>
+        <tr>
+            <td><%=notice.notice_idx%></td>
+            <td><a href="/notices/<%=notice.notice_idx%>"><%=notice.notice_title%></a></td>
+            <td style="text-align:center;"><%=notice.notice_date%></td>
+            <td style="text-align:center;"><%=notice.notice_writer%></td>
+            <td style="text-align:center;"><%=index%></td>
+        </tr>
+    <% }); %>
+    </tbody>
+</table>
+
+
+<br>
+<div class="ui two column centered grid">
+  <div class="ui centered pagination menu">
+          <a class="icon item">
+            <i class="left chevron icon"></i>
+          </a>
+          <a class="item">1</a>
+          <a class="item">2</a>
+          <a class="item">3</a>
+          <a class="item">4</a>
+          <a class="icon item">
+            <i class="right chevron icon"></i>
+          </a>
+        </div>
+
+</div>

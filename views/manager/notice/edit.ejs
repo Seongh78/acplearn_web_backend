@@ -1,0 +1,80 @@
+<div id="content" class="thirteen wide column">
+    <h1><%=title%></h1>
+
+
+<form class="newNotice" >
+            <div class="cardbox" style="margin:0; padding:25px;">
+
+                <table class="ui form centerLayout">
+                    <colgroup>
+                        <col width="10%">
+                        <col width="60%">
+                    </colgroup>
+                    <tr>
+                        <th>제목</th>
+                        <td><input class="notice_title" type="text" placeholder="제목을 입력해 주세요" style="width:85%;" value="<%=notice.notice_title%>"></td>
+                    </tr>
+                    <tr>
+                        <th>내용</th>
+                        <td><textarea class="notice_text" style="width:85%;" rows="6" placeholder="내용을 입력해 주세요"><%=notice.notice_text%></textarea></td>
+                    </tr>
+                    <tr>
+                        <th>첨부파일</th>
+                        <td>
+                            <input class="notice_file" type="file" placeholder="제목을 입력해 주세요" style="width:85%;">
+                            <!-- <button type="button" class="ui primary button" style="width:10%; height:42.5px;">추가</button> -->
+                        </td>
+                    </tr>
+                </table>
+
+
+            </div>
+
+            <div class="cardbox" style="margin:10px 0; padding:25px; text-align:center;">
+                <button class="ui button" onclick="history.back(-1);">취소</button>
+                <button class="ui primary button sbmNotice" type="button">등록</button>
+            </div>
+</form>
+        </div>
+        <!-- content -->
+
+
+
+
+    </div>
+
+
+
+
+</div>
+
+
+
+<script type="text/javascript">
+var re=/^[a-z0-9_-]{10,255}$/;
+    $(document).on('click', '.sbmNotice', function() {
+        // alert('a');
+        var notice ={
+            title : $('.notice_title').val(),
+            text : $('.notice_text').val(),
+            file : $('.notice_file').val()
+        }
+        if (notice.title==undefined || notice.title=='' || notice.text==undefined || notice.text=='') {
+            alert('공지사항의 모든 양식을 채워주세요.');
+            return false;
+        }
+        $.ajax({
+            url: '/manager/notices/edit/<%=notice.notice_idx%>',
+            type: 'post',
+            data: notice,
+            success: function(resp) {
+                // console.log(resp);
+                if (resp.result===500) {
+                    alert('사소한 문제가 발생했습니다 :(  다시 한번 시도해 주세요');
+                    return false;
+                }
+                location.href="/manager/notices/<%=notice.notice_idx%>";
+            }
+        });
+    })
+</script>

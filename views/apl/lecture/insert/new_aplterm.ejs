@@ -1,0 +1,206 @@
+<div class="" style="margin-top:0;">
+
+
+            <div class="cardbox" style="margin:10px 0; padding:25px; ">
+                <h2>APL기간 </h2>
+
+            </div>
+
+
+            <div class="cardbox" style="margin:0; padding:25px; ">
+                <h3>전체 기간</h3>
+                <table class="ui table celled form centerLayout">
+                    <colgroup>
+                        <col width="40%">
+                        <col width="40%">
+                        <col width="20%">
+                    </colgroup>
+                    <tr>
+                        <th>시작일</th>
+                        <th>종료일</th>
+                        <th>회차</th>
+                    </tr>
+                    <tr>
+                        <td><input type="date" placeholder="시작일을 입력해 주세요" style="width:90%;" v-model="terms.start_date"></td>
+                        <td><input type="date" placeholder="종료일을 입력해 주세요" style="width:90%;" v-model="terms.end_date"></td>
+                        <td>
+                            <input type="number" value="0" style="width:55%;" v-model="cc" min="0" max="100" step="1">
+                            <button type="button" class="ui primary button" @click.prevent="addSession">확인</button>
+                        </td>
+                    </tr>
+                    <!-- <tr>
+                        <th>시작일</th>
+                        <td><input type="date" placeholder="시작일을 입력해 주세요" style="width:90%;" v-model="terms.start_date"></td>
+                        <th>종료일</th>
+                        <td><input type="date" placeholder="종료일을 입력해 주세요" style="width:90%;" v-model="terms.end_date"></td>
+                        <th>회차</th>
+                        <td>
+                            <input type="number" value="0" style="width:45%;" v-model="cc" min="0" max="100" step="1">
+                            <button type="button" class="ui primary button" @click.prevent="addSession">확인</button>
+                        </td>
+                    </tr> -->
+                </table>
+
+            </div>
+
+            <div class="cardbox" style="margin:10px 0; padding:25px; min-height:350px;">
+
+                <h3>상세 기간</h3>
+                <table class="ui celled table form">
+                    <colgroup>
+                        <col width="7%">
+                        <col width="20%">
+                        <col width="20%">
+                        <col width="53%">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                          <th>회차</th>
+                          <th>시작일</th>
+                          <th>종료일</th>
+                          <th>장소</th>
+                        </tr>
+                    </thead>
+                    <tbody  v-if="terms.sessionCount<1">
+                        <tr>
+                          <td colspan="3">아직 회차정보를 입력하지 않으셨군요. 회차정보를 입력해 주세요</td>
+                        </tr>
+                    </tbody>
+                    <tbody v-else>
+                        <tr v-for="(t, i) in terms.sessionDetail">
+                          <td>
+                              {{ i+1 }}
+                          </td>
+                          <td>
+                              <input type="date" placeholder="제목을 입력해 주세요" style="width:95%;" v-model="terms.sessionDetail[i].start">
+                          </td>
+                          <td>
+                              <input type="date" placeholder="제목을 입력해 주세요" style="width:95%;" v-model="terms.sessionDetail[i].end">
+                          </td>
+                          <td>
+                              <input type="text" placeholder="장소를 입력해 주세요" style="width:100%;">
+                          </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+
+            </div>
+
+            <div class="cardbox" style="margin:10px 0; padding:25px; text-align:center;">
+                <button class="ui button" @click.prevent="save">저장</button>
+                <button class="ui primary button" onclick="move('/lectures/new/timetable')">다음페이지</button>
+            </div>
+        </div>
+        <!-- content -->
+
+
+
+
+    </div>
+
+
+
+
+<!-- 모달 -->
+<modal-window class="mdmd" mtitle="기간 확인">
+    <table class="ui celled table">
+        <colgroup>
+            <col width="5%">
+            <col width="40%">
+        </colgroup>
+          <thead>
+            <tr>
+              <th></th>
+              <th>강의명</th>
+              <th>분야</th>
+              <th>저장날짜</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr >
+              <td><input type="checkbox" name="" value=""></td>
+              <td>-</td>
+              <td>
+                  산업안전
+              </td>
+              <td>-</td>
+            </tr>
+          </tbody>
+    </table>
+</modal-window>
+
+
+</div>
+<!-- Lyot end -->
+
+
+<script type="text/javascript">
+
+
+
+    // Vue
+    var vapp = new Vue({
+        el: '#app',
+        data: {
+            cc:0,
+            termCount:0,
+            terms: { // apl기간 model
+                start_date : '',
+                end_date  : '',
+                location    : '',
+                sessionCount:0,
+                sessionDetail: []
+            },
+
+            sd: []
+        },
+
+        created: function () {
+            let term = sessionStorage.getItem('lecture-term');
+            let count = sessionStorage.getItem('lecture-sessionCount');
+
+
+            if(term){
+                this.terms = JSON.parse(term);
+                this.cc = this.terms.sessionCount = count;
+                console.log(this.cc);
+            }
+        },
+
+
+
+
+        methods: {
+            modal() { // 모달
+                onModal('mdmd');
+            },
+
+            addSession(){//회차
+                this.terms.sessionCount = this.cc;
+                this.terms.sessionDetail = [];
+
+                for(var ii=0;   ii<this.cc;  ii++){
+                    this.terms.sessionDetail.push({
+                        start:'0000-00-00', end:'0000-00-00', sessions:new Array()
+                    });
+                }
+            }, //addSession()
+
+            save(){ //저장
+                if (this.terms.sessionDetail=='') {
+                    alert('회차정보를 입력해 주세요');
+                    return;
+                }
+                // console.log(this.termCount);
+                sessionStorage.setItem('lecture-term', JSON.stringify(this.terms));
+                sessionStorage.setItem('lecture-sessionCount', this.terms.sessionCount);
+                move('/lectures/new/timetable');
+
+            }//save()
+        }
+
+    }).$mount('#app');//vapp//vapp
+
+
+</script>

@@ -1,0 +1,128 @@
+
+
+<h1 class="ui header">기업정보</h1>
+
+<hr>
+<div class="ui secondary  menu" style="padding:0;">
+  <a href="#" class="item active">전체</a>
+
+  <div class="right menu" style="padding:0;">
+
+    <div class="item" style="padding:0;">
+      <div class="ui icon input">
+        <input type="text" placeholder="Search...">
+        <i class="search link icon"></i>
+      </div>
+    </div>
+
+  </div>
+</div>
+<hr>
+
+<table class="ui celled padded table ">
+    <colgroup>
+        <col width="13%">
+        <col width="35%">
+    </colgroup>
+    <thead>
+    <tr>
+        <th class="center aligned">사업자번호</th>
+        <th class="center aligned">기업명</th>
+        <th class="center aligned">업종</th>
+        <th class="center aligned">주소</th>
+        <th class="center aligned">진행과정</th>
+    </tr>
+    </thead>
+    <tbody>
+    <% for(var ii=0; ii<10; ii++){ %>
+    <tr>
+        <td class="center aligned">251-02-220435</td>
+        <td class="single line"><a href="/company/<%=ii%>">(주)Acplean</a></td>
+        <td class="center aligned">의료</td>
+        <td class="center aligned">부산광역시 남구 수영로 88</td>
+        <td class="center aligned">5회 <button id="companyCompleteView" class="button ui mini basic">보기</button></td>
+    </tr>
+    <% }%>
+    </tbody>
+</table>
+
+<br>
+<div class="ui two column centered grid">
+  <div class="ui centered pagination menu">
+          <a class="icon item">
+            <i class="left chevron icon"></i>
+          </a>
+          <a class="item">1</a>
+          <a class="item">2</a>
+          <a class="item">3</a>
+          <a class="item">4</a>
+          <a class="icon item">
+            <i class="right chevron icon"></i>
+          </a>
+        </div>
+
+        <a id="insertCompany">
+        <div class="ui  animated button" tabindex="0" style="position:absolute; right:25px; height:40px; background:#4374D9; color: #fff;">
+          <div class="visible content">기업등록</div>
+          <div class="hidden content">
+            <i class="right arrow icon"></i>
+          </div>
+        </div></a>
+</div>
+
+
+
+
+
+
+
+
+<!-- 진행과정보기 모달 -->
+<div class="ui listCompany modal">
+    <i class="close icon"></i>
+    <div class="header">기업체 등록</div>
+    <div class="content ">
+        <table class="ui table celled">
+            <thead>
+                <tr>
+                    <th>no</th>
+                    <th>강의명</th>
+                    <th>액션러닝기간</th>
+                    <th>강의시간</th>
+                    <th>수강인원</th>
+                    <th>담당자</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% for(var ii=1; ii<=4; ii++){ %>
+                <tr>
+                    <td><%=ii%></td>
+                    <td>우리회사 감성안전 지킴이</td>
+                    <td>2017.01.01 ~ 2017.02.05</td>
+                    <td>16시간 (4일)</td>
+                    <td>45명</td>
+                    <td>정길동</td>
+                </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+    <div class="actions">
+        <div class="ui black deny button">닫기</div>
+        <div class="ui positive right labeled icon button">
+            등록하기<i class="checkmark icon"></i>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script type="text/javascript">
+    $(document).on('click', '#insertCompany', function() {
+        location.href='/company/new';
+    })
+    $(document).on('click', '#companyCompleteView', function() {
+        $('.ui.listCompany').modal({duration:100}).modal('show');
+    })
+</script>

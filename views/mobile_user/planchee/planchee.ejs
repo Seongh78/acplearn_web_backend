@@ -1,0 +1,54 @@
+<%- include('../modules/tabmenu')%>
+<br>
+<div class="" style="padding:3%;">
+    <h3>[SELF] 우리회사 감성안전 지킴이</h3>
+
+<hr>
+<% for(var ii=1; ii<=6; ii++){ %>
+    <table class="ui table celled unstackable" onclick="location.href='/m/user/planchee/detail'" style="cursor:pointer;">
+        <colgroup>
+            <col width="15%">
+        </colgroup>
+        <tr>
+            <td rowspan="2"><a class="avatar">
+              <img src="https://semantic-ui.com/images/avatar/small/matt.jpg">
+          </a><br><label>박길동</label></td>
+
+            <td>진행 중 PLAN </td>
+            <td>5</td>
+            <td>종료 PLAN</td>
+            <td>5</td>
+        </tr>
+        <tr>
+            <td>MY 응원 플랜 </td>
+            <td>1건 </td>
+            <td>MY 평가 플랜 </td>
+            <td>1건 </td>
+        </tr>
+    </table>
+<% } %>
+    <br>
+
+
+
+
+</div>
+
+
+
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script type="text/javascript">
+
+    $(document).ready(function(){
+        $('.st').rating({
+                initialRating: 4,
+                maxRating: 5
+        });
+
+        $('.ui.checkbox').checkbox();
+    });
+
+</script>

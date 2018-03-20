@@ -1,0 +1,53 @@
+<%- include('../modules/tabmenu')%>
+<br>
+<div class="" style="padding:3%;">
+    <h3>[SELF] 우리회사 감성안전 지킴이</h3>
+
+<hr>
+<% for(var ii=1; ii<=6; ii++){ %>
+    <table class="ui table  unstackable">
+        <colgroup>
+            <col width="15%">
+        </colgroup>
+        <tr>
+            <td rowspan="2"><a class="avatar">
+              <img src="https://semantic-ui.com/images/avatar/small/matt.jpg">
+          </a><br><label>박길동</label></td>
+
+            <td> <button type="button" class="ui button">평가요청</button> </td>
+            <td> <button type="button" class="ui button">평가요청 중</button> </td>
+            <td> <button type="button" class="ui red button">평가자</button> </td>
+        </tr>
+        <tr>
+
+            <td> <button type="button" class="ui button">응원요청</button> </td>
+            <td> <button type="button" class="ui button">응원요청 중</button> </td>
+            <td> <button type="button" class="ui red button">응원자</button> </td>
+        </tr>
+    </table>
+<% } %>
+    <br>
+
+
+
+
+</div>
+
+
+
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script type="text/javascript">
+
+    $(document).ready(function(){
+        $('.st').rating({
+                initialRating: 4,
+                maxRating: 5
+        });
+
+        $('.ui.checkbox').checkbox();
+    });
+
+</script>

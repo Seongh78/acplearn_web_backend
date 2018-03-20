@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title><%= title %></title>
+        <link rel='stylesheet' href='/stylesheets/style.css' />
+        <link rel="stylesheet" type="text/css" href="/semantic/semantic.css">
+
+        <!-- JQuery -->
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js"
+          crossorigin="anonymous"></script>
+        <!-- Semantic -->
+        <script src="/semantic/semantic.js"></script>
+        <!-- Vue import -->
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.4/vue.min.js"></script>
+
+
+        <!-- Semantic func -->
+        <script type="text/javascript">
+            $(document).ready(function() {
+                $('.dropdown').dropdown({maxSelections: 3});
+                $('.tooltip').popup();
+                $('.dropdown').dropdown();
+                $('.accordion').accordion({
+                    selector: { trigger: '.title .icon' }
+                });
+                // $('.checkbox').checkbox();
+                $('.menu .item').tab();
+            });
+            // 탭메뉴
+
+
+
+
+
+
+
+            // 모달
+            function onModal(cl, setting) {
+                /*
+                {// 옵션값
+                    duration:0, // 열림속도
+                    closable: true, // false시 모달 안닫힘!
+                    onDeny(){},// deny 클래스 클릭 시 이벤트
+                    onApprove() { // positive 클래스 클릭 시 이벤트
+                    }
+                }
+                */
+
+                var option = {
+                    duration:0, // 열림속도
+                }
+                if (setting != undefined) {
+                    // option = setting;
+                    option.onApprove = setting;
+                }
+                $('.'+cl).modal(option).modal('show');
+            }
+
+
+
+
+            // 페이지 이동
+            function move(ur) {
+                document.location.href=ur;
+            }
+
+            // 쿠키 생성
+            function setCookie(cName, cValue, cDay){
+                var expire = new Date();
+                expire.setDate(expire.getDate() + cDay);
+                cookies = cName + '=' + escape(cValue) + '; path=/ '; // 한글 깨짐을 막기위해 escape(cValue)를 합니다.
+                if(typeof cDay != 'undefined') cookies += ';expires=' + expire.toGMTString() + ';';
+                document.cookie = cookies;
+            }
+
+            // 쿠키 가져오기
+            function getCookie(cName) {
+                cName = cName + '=';
+                var cookieData = document.cookie;
+                var start = cookieData.indexOf(cName);
+                var cValue = '';
+                if(start != -1){
+                    start += cName.length;
+                    var end = cookieData.indexOf(';', start);
+                    if(end == -1)end = cookieData.length;
+                    cValue = cookieData.substring(start, end);
+                }
+                return unescape(cValue);
+            }
+
+
+
+
+
+
+
+            // 뷰 컴포넌트
+            Vue.component('modal-window', {
+                props: ['mtitle'],
+                template:
+                '<div class="ui modal">'+
+                    '<i class="close icon"></i>'+
+                    '<div class="header"> {{mtitle}} </div>'+
+                    '<slot></slot>'+
+                    // '<div class="content"><slot></slot></div>'+
+                    // '<div class="actions">'+
+                    //     '<div class="ui black deny button">닫기</div>'+
+                    //     '<div class="ui positive right labeled icon button">'+
+                    //         '적용하기<i class="checkmark icon"></i>'+
+                    //     '</div>'+
+                    // '</div>'+
+                '</div>'
+            })
+        </script>
+
+    </head>
+
+    <style media="screen">
+        html, body{
+            width: 100%;
+            height:100%;
+            background-color: #f8f8f8;
+        }
+        a{
+            cursor: pointer;
+        }
+        th{
+            background: #F9FAFB;
+            padding:0.92857143em 0.78571429em;
+        }
+        .borderBottom{
+            border-bottom: 1px solid rgba(34, 36, 38, 0.1);
+        }
+        .borderTop{
+            border-top: 1px solid rgba(34, 36, 38, 0.1);
+        }
+    </style>
+
+    <body>
+
+
+    <div id="app" class="ui grid">
+
+
+        <%- include('../../modules/navi') %>
+
+        <div id="content" class="sixteen wide column centerLayout" >
+
+
+            <div class="ui ordered steps" style="width:100%; ">
+                <%
+                var selectFlag='completed';
+                var step = [
+                    { title: '강의개요', sub: 'summary' },
+                    { title: 'APL기간', sub: 'aplterm' },
+                    { title: '시간표', sub: 'timetable' },
+                    { title: 'KPI설정', sub: 'kpi' },
+                    { title: '수강생', sub: 'students' },
+                    { title: '팀빌딩', sub: 'team' },
+                    { title: '설문', sub: 'survey' }
+                ];
+
+                step.forEach(function(st){
+                selectFlag = (st.sub == selector) ? 'active' : (st.sub!=selector && selectFlag!='completed')?'':'completed';
+                %>
+                    <div class="<%=selectFlag%> step" onclick="move('/lectures/new/<%=st.sub%>')" style="cursor:pointer;">
+                        <div class="content">
+                            <div class="title"><%=st.title%></div>
+                            <div class="description"><%=st.sub%></div>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+
+
+            <!-- Content View -->
+            <%- include('insert/new_'+selector)%>
+
+        </div>
+        <!-- #content -->
+
+    </div>
+    <!-- #app -->
+
+
+
+    </body>
+</html>

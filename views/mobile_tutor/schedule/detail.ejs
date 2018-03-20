@@ -1,0 +1,56 @@
+
+<!-- 강의정보 -->
+<div  style="padding:5%;">
+    <h4 style="color:#00addf;"><div class="ui green small horizontal label">진행대기</div> 2017년 11월 23일</h4>
+    <h3>우리회사 감성안전 지킴이</h3>
+    <p>
+        <b>시간: </b> 09:00 ~ 18:00 [08시간 00분]
+        <br>
+        <b>대상: </b> (주)아카스타 [35명]
+        <br>
+        <b>기간: </b> 2017.01.01 ~ 2017.02.01 [12시간 / 3일]
+        <br>
+        <b>장소: </b> 부산광역시 남구 수영대로 99 [액플런 본사]
+    </p>
+</div>
+
+<!-- 탭메뉴 -->
+<div class="ui four item menu tabmenu attached" style="margin:0; border-color:#f1f1f1; text-align:center;">
+    <a data-tab="p1" class="item active" style="padding:20px;"><i class="video play outline icon"></i>진행</a>
+    <a data-tab="p2" class="item " style="padding:20px;"><i class="users icon"></i>팀관리</a>
+    <a data-tab="p3" class="item " style="padding:20px;"><i class="checked calendar icon"></i>출결</a>
+    <a data-tab="p4" class="item" style="padding:20px;"><i class="line chart icon"></i>리포트</a>
+</div>
+
+
+
+<!-- 탭 본문 -->
+<div class="ui bottom attached active tab segment" data-tab="p1">
+<%- include('tab01')%>
+<%- include('../../modules/mobile_bottom_btn')%>
+</div>
+
+
+<div class="ui bottom attached  tab segment" data-tab="p2">
+<%- include('tab02')%>
+</div>
+
+
+<div class="ui bottom attached  tab segment" data-tab="p3">
+<%- include('tab03')%>
+</div>
+
+
+<div class="ui bottom attached  tab segment" data-tab="p4">
+<%- include('tab04')%>
+</div>
+
+
+
+
+
+
+
+
+<script type="text/javascript">
+</script>

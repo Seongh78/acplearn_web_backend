@@ -1,0 +1,118 @@
+    html, body{
+        width: 100%;
+        min-width: 1200px;
+        height:100%;
+        padding: 0;
+        background-color: #f8f8f8;
+    }
+    hr{
+        opacity: 0.5;
+    }
+
+    li{
+        list-style: none;
+    }
+
+    #app{
+        /*background: #f8f8f8;*/
+        height: 100%;
+    }
+
+    #navi{
+        background: #3b485f;
+        /*background: #4374D9;*/
+        color:#fff;
+        height: 80px;
+        padding: 10px 40px;
+    }
+        #logo{
+            float: left;
+            margin-top:15px;
+        }
+        .rightMenu{
+            float: right;
+            right:0;
+            margin-top:27px;
+        }
+        .rightMenu li{
+            display: inline-block;
+            margin-left: 20px;
+            cursor: pointer;
+        }
+        .rightMenu li a:link{ color:#fff;  }
+        .rightMenu li a:active{ color:#fff;  }
+        .rightMenu li a:visited{ color:#fff;  }
+        .rightMenu li a:hover{ color:#BCE55C; text-decoration: underline;}
+
+    #logo{
+        cursor: pointer;
+    }
+        #logo:hover{
+            color:#BCE55C;
+        }
+
+    #sideNavi{
+        background: #fff;
+        border-right: 1px solid #dfdfdf;
+        padding:0;
+        width: 100%;
+        max-width: 350px;
+        min-width:200px;
+        height: 100%;
+        border-radius: 0;
+        border-right: 1px solid #dfdfdf;
+        clear: both;
+    }
+        #sideNavi > .item{
+            padding:25px;
+        }
+
+    #sideNavi, #content{
+        height: 100%;
+        margin: 0;
+    }
+    #content{
+        clear: both;
+        padding:25px;
+        width: 100%;
+        max-width: 1400px;
+        min-width: 900px;
+        margin:0 auto;
+    }
+
+    .cardbox{
+        background: #fff;
+        margin:10px;
+        padding:10px;
+        box-shadow: 1px 2px 3px 1px rgba(0, 0, 0, 0.08);
+    }
+
+
+
+
+    .centerLayout{
+        width: 100%;
+        max-width: 1200px !important;
+        margin:0 auto !important;
+    }
+
+
+
+
+
+    /*timetable*/
+    .timetable-lectureModules{
+        margin-left:0;
+        padding-left: 0;
+    }
+    .timetable-lectureModules li{
+        margin-top: 15px;
+    }
+
+
+
+
+
+
+
+    /**/

@@ -1,0 +1,97 @@
+<!-- <div id="sideNavi" class="three wide column ui vertical menu">
+    <a class="item " href="#">강의관리</a>
+    <a class="item " href="#">수강신청관리</a>
+    <a class="item " href="#">수료관리</a>
+    <a class="item " href="#">신청자관리</a>
+    <a class="item " href="#">신청이력관리</a>
+</div> -->
+
+<div id="content" class="fourteen wide column">
+    <h1>APL강좌</h1>
+
+
+<!-- 검색 -->
+<div class="ui secondary  menu" style="padding:0;">
+  <a class="item active">진행중</a>
+  <a class="item ">종료</a>
+
+  <div class="right menu" style="padding:0;">
+    <div class="item" style="padding:0;">
+      <div class="ui icon input">
+        <input type="text" placeholder="Search...">
+        <i class="search link icon"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+<!-- 리스트 -->
+<table class="ui single line table">
+    <colgroup>
+        <col width="5%">
+        <col width="37%">
+        <col width="18%">
+        <col width="23%">
+        <col width="7%">
+        <col width="8%">
+    </colgroup>
+    <thead>
+        <tr>
+            <th>No</th>
+            <th>강의명</th>
+            <th>기간</th>
+            <th>장소</th>
+            <th style="text-align:center;">정원</th>
+            <th style="text-align:center;">현황</th>
+        </tr>
+    </thead>
+    <tbody>
+    <% rec.forEach(function(r, i){ %>
+        <tr>
+            <td><%=i%></td>
+            <td><a href="/manager/aplectures/<%=r.rec_idx%>"><%=r.rec_title%></a></td>
+            <td><%=r.rec_date1%> ~ <%=r.rec_date2%></td>
+            <td><%=r.rec_location%></td>
+            <td style="text-align:center;"><%=r.rec_count%>명</td>
+            <td style="text-align:center;">
+                <%=r.rec_status%> <button type="button" class="button" onclick="confirm('선발완료로 전환하시겠습니까?')">선발완료 전환</button>
+            </td>
+        </tr>
+    <% }); %>
+    </tbody>
+</table>
+<br>
+<div class="ui two column centered grid">
+  <div class="ui centered pagination menu">
+          <a class="icon item">
+            <i class="left chevron icon"></i>
+          </a>
+          <a class="item">1</a>
+          <a class="item">2</a>
+          <a class="item">3</a>
+          <a class="item">4</a>
+          <a class="icon item">
+            <i class="right chevron icon"></i>
+          </a>
+        </div>
+
+        <a href="/manager/aplectures/new">
+        <div class="ui  animated button" tabindex="0" style="position:absolute; right:25px; height:40px; background:#4374D9; color: #fff;">
+          <div class="visible content ">신규강의</div>
+          <div class="hidden content">
+            <i class="right arrow icon"></i>
+          </div>
+        </div></a>
+
+</div>
+
+
+
+
+
+</div>

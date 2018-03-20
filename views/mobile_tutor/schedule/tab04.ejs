@@ -1,0 +1,296 @@
+
+
+<div id="tl" class="ui secondary menu">
+  <a class="active item">
+    <p><b>1차</b><br>2017.12.25</p>
+  </a>
+  <a class="item">
+    <p><b>2차</b><br>2017.12.25</p>
+  </a>
+  <a class="item">
+    <p><b>3차</b><br>2017.12.25</p>
+  </a>
+</div>
+<h5>액션러닝 기간:  2017.12.25 ~ 2018.01.25</h5>
+<p>
+    <div class="ui toggle checkbox">
+        <input type="checkbox" name="gift" tabindex="0" class="hidden" checked><label>상세</label>
+      </div>
+</p>
+
+
+
+<div class="ui top attached tabular menu">
+  <a class="active item" data-tab="first">전체</a>
+  <a class="item" data-tab="second">조별</a>
+</div>
+
+
+<!--  -->
+<div class="ui bottom attached active tab segment" data-tab="first">
+  <div class="">
+      <label for="">Action KPI</label>
+      <select class="" name="">
+          <option value="">리더십</option>
+          <option value="">산업안전</option>
+          <option value="">커뮤니케이션</option>
+      </select>
+  </div>
+
+  <div id="container3" style="min-width: 210px; width:100%; height: 230px; margin: 0 auto"></div>
+
+  <table class="ui table celled unstackable">
+      <colgroup>
+          <col width="10%">
+          <col width="13.33%">
+          <col width="13.33%">
+          <col width="13.33%">
+          <col width="13.33%">
+          <col width="13.33%">
+          <col width="13.33%">
+          <col width="10%">
+      </colgroup>
+      <tbody>
+      <tr>
+          <td class="center aligned">자기평가</td>
+          <td class="center aligned">1.5</td>
+          <td class="center aligned">3.5</td>
+          <td class="center aligned">1.5</td>
+          <td class="center aligned">4</td>
+          <td class="center aligned">4</td>
+          <td class="center aligned">1.5</td>
+          <td class="center aligned">-</td>
+      </tr>
+      <tr>
+          <td class="center aligned">GAP</td>
+          <td class="center aligned">-</td>
+          <td class="center aligned">+1</td>
+          <td class="center aligned">0</td>
+          <td class="center aligned">0</td>
+          <td class="center aligned">+1.5</td>
+          <td class="center aligned">+1.5</td>
+          <td class="center aligned">-</td>
+      </tr>
+      <tr>
+          <td class="center aligned">팀원평가</td>
+          <td class="center aligned">-</td>
+          <td class="center aligned">4.5</td>
+          <td class="center aligned">1.5</td>
+          <td class="center aligned">4</td>
+          <td class="center aligned">2.5</td>
+          <td class="center aligned">2.5</td>
+          <td class="center aligned">-</td>
+      </tr>
+      </tbody>
+  </table>
+</div>
+
+
+
+<!--  -->
+<div class="ui bottom attached tab segment" data-tab="second">
+  <div class="">
+      <label for="">Action KPI</label>
+      <select class="" name="">
+          <option value="">리더십</option>
+          <option value="">산업안전</option>
+          <option value="">커뮤니케이션</option>
+      </select>
+  </div>
+
+<% for(var oo=1; oo<=4; oo++){ %>
+  <h4><%=oo%>조</h4>
+  <p>
+      <a href="#">[박길동], </a>
+      <a href="#">[김길동], </a>
+      <a href="#">[정길동], </a>
+      <a href="#">[홍길동] </a>
+  </p>
+  <div id="container<%=oo+3%>" style="min-width: 210px; width:100%; height: 230px; margin: 0 auto"></div>
+
+  <table class="ui table celled unstackable">
+      <colgroup>
+          <col width="10%">
+          <col width="13.33%">
+          <col width="13.33%">
+          <col width="13.33%">
+          <col width="13.33%">
+          <col width="13.33%">
+          <col width="13.33%">
+          <col width="10%">
+      </colgroup>
+      <tbody>
+      <tr>
+          <td class="center aligned">자기평가</td>
+          <td class="center aligned">1.5</td>
+          <td class="center aligned">3.5</td>
+          <td class="center aligned">1.5</td>
+          <td class="center aligned">4</td>
+          <td class="center aligned">4</td>
+          <td class="center aligned">1.5</td>
+          <td class="center aligned">-</td>
+      </tr>
+      <tr>
+          <td class="center aligned">GAP</td>
+          <td class="center aligned">-</td>
+          <td class="center aligned">+1</td>
+          <td class="center aligned">0</td>
+          <td class="center aligned">0</td>
+          <td class="center aligned">+1.5</td>
+          <td class="center aligned">+1.5</td>
+          <td class="center aligned">-</td>
+      </tr>
+      <tr>
+          <td class="center aligned">팀원평가</td>
+          <td class="center aligned">-</td>
+          <td class="center aligned">4.5</td>
+          <td class="center aligned">1.5</td>
+          <td class="center aligned">4</td>
+          <td class="center aligned">2.5</td>
+          <td class="center aligned">2.5</td>
+          <td class="center aligned">-</td>
+      </tr>
+      </tbody>
+  </table>
+  <% }%>
+</div>
+
+
+
+
+<!--  -->
+
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script type="text/javascript">
+
+$(document).ready(function () {
+    $('.menu .item').tab();
+})
+
+Highcharts.createElement('link', {
+   href: 'https://fonts.googleapis.com/css?family=Dosis:400,600',
+   rel: 'stylesheet',
+   type: 'text/css'
+}, null, document.getElementsByTagName('head')[0]);
+
+Highcharts.theme = {
+   colors: ['#7cb5ec', '#f7a35c', '#90ee7e', '#7798BF', '#aaeeee', '#ff0066',
+      '#eeaaee', '#55BF3B', '#DF5353', '#7798BF', '#aaeeee'],
+   chart: {
+      backgroundColor: null,
+      style: {
+         fontFamily: 'Dosis, sans-serif'
+      }
+   },
+   title: {
+      style: {
+         fontSize: '16px',
+         fontWeight: 'bold',
+         textTransform: 'uppercase'
+      }
+   },
+   tooltip: {
+      borderWidth: 0,
+      backgroundColor: 'rgba(219,219,216,0.8)',
+      shadow: false
+   },
+   legend: {
+      itemStyle: {
+         fontWeight: 'bold',
+         fontSize: '12px'
+
+      }
+   },
+   xAxis: {
+      gridLineWidth: 1,
+      labels: {
+         style: {
+            fontSize: '15px'
+         }
+      }
+   },
+   yAxis: {
+      minorTickInterval: 'auto',
+      title: {
+         style: {
+            textTransform: 'uppercase'
+         }
+      },
+      labels: {
+         style: {
+            fontSize: '13px'
+         }
+      }
+   },
+   plotOptions: {
+      candlestick: {
+         lineColor: '#404048'
+      }
+   },
+
+
+   // General
+   background2: '#F0F0EA'
+
+};
+
+
+
+// Apply the theme
+Highcharts.setOptions(Highcharts.theme);
+var opt = {
+    title: {
+        text: ''
+    },
+    credits: {
+        enabled: false
+    },
+    xAxis: {
+        title:{
+            enabled:false
+        },
+        categories: ['1차', '2차', '3차', '4차']
+    },
+    labels: {
+        enabled:false,
+        items: [{
+            // html: 'Total fruit consumption<b>123</b>',
+            style: {
+                left: '50px',
+                top: '18px',
+                color: (Highcharts.theme && Highcharts.theme.textColor) || 'black'
+            }
+        }]
+    },
+    series: [{
+        type: 'column',
+        name: '자가평가',
+        data: [1.5, 3.5, 1.5, 4, 4, 1.5]
+    }, {
+        type: 'column',
+        name: '팀평가',
+        data: [0, 4.5, 1.5, 4, 2.5, 2.5]
+    }, {
+        type: 'spline',
+        name: 'Gap',
+        data: [0, 4.5, 1.5, 4, 2.5, 2.5],
+        marker: {
+            lineWidth: 2,
+            lineColor: Highcharts.getOptions().colors[3],
+            fillColor: 'white'
+        }
+    }]
+}
+
+
+for(var i=3; i<=8; i++){
+        Highcharts.chart('container'+i, opt);
+}
+
+
+
+
+</script>

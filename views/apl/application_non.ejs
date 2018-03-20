@@ -1,0 +1,93 @@
+<h1 class="ui header">수강내역</h1>
+
+
+<hr>
+
+<!-- 검색 -->
+<div class="ui secondary  menu" style="padding:0;">
+  <a class="item active">전체(20건)</a>
+
+  <div class="right menu" style="padding:0;">
+    <div class="item" style="padding:0;">
+      <div class="ui icon input">
+        <input type="text" placeholder="Search...">
+        <i class="search link icon"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+
+<!-- LIST -->
+<table class="ui single line table">
+    <colgroup>
+        <col width="5%">
+        <col width="37%">
+        <col width="18%">
+        <col width="23%">
+        <col width="10%">
+        <col width="8%">
+    </colgroup>
+    <thead>
+        <tr>
+            <th>No</th>
+            <th>강의명</th>
+            <th>기간</th>
+            <th>장소</th>
+            <th style="text-align:center;">수료여부</th>
+            <th style="text-align:center;">결과</th>
+        </tr>
+    </thead>
+    <tbody>
+    <% for(var ii=1; ii<=7; ii++){ %>
+        <tr>
+            <td><%=ii%></td>
+            <td><a href="/detail_non/<%=ii%>">2017년 3차 APL자격 취득 강사 양성교육</a></td>
+            <td>2018-01-05 ~ 2018-01-08</td>
+            <td>부산광역시 남구 수영대로 99-1 부산본사</td>
+            <td style="text-align:center;"><%=(ii<4?'수료':'미수료')%></td>
+            <td style="text-align:center;"><%=(ii<4?'2차탈락':'1차탈락')%></td>
+        </tr>
+    <% } %>
+    </tbody>
+</table>
+<br>
+<div class="ui two column centered grid">
+  <div class="ui centered pagination menu">
+          <a class="icon item">
+            <i class="left chevron icon"></i>
+          </a>
+          <a class="item">1</a>
+          <a class="item">2</a>
+          <a class="item">3</a>
+          <a class="item">4</a>
+          <a class="icon item">
+            <i class="right chevron icon"></i>
+          </a>
+        </div>
+
+</div>
+
+
+
+
+<!-- 이동버튼 -->
+<button class="circular ui icon orange button tooltip" style="position:fixed; bottom:35px; right: 30px;  font-size:1.75em; box-shadow:1px 1px 1px 1px rgba(0,0,0,0.1);" data-content="APL tutor바로가기(제거예정)" onclick="location.href='/dashboard'">
+  <i class="icon mail forward"></i>
+</button>
+
+<!-- <form class="ui form grid">
+  <div class="fields four wide column inline" style="margin:0; padding-right:0;">
+    <input type="text" name="first-name" placeholder="Search..">
+  </div>
+  <div class="fields two wide column inline" style="margin:0; padding-left:5px;">
+    <button class="ui primary button">검색</button>
+  </div>
+  </form> -->
+  <script type="text/javascript">
+      $(document).ready(function() {
+              $('.tooltip').popup();
+      });
+  </script>

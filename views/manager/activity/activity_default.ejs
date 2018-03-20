@@ -1,0 +1,162 @@
+<!-- <div id="sideNavi" class="three wide column ui vertical menu">
+    <a class="item " href="#">강의관리</a>
+    <a class="item " href="#">수강신청관리</a>
+    <a class="item " href="#">수료관리</a>
+    <a class="item " href="#">신청자관리</a>
+    <a class="item " href="#">신청이력관리</a>
+</div> -->
+
+<div id="content" class="fourteen wide column">
+    <h1>APL_Activity</h1>
+
+
+<!-- 검색 -->
+<div class="ui secondary  menu" style="padding:0;">
+  <a href="/manager/activity" class="item ">Activity 승인관리</a>
+  <a href="/manager/activity/opened" class="item ">개설중 과정</a>
+  <a href="/manager/activity/ing" class="item ">강의진행중 과정</a>
+  <a href="/manager/activity/complete" class="item ">강의완료 과정</a>
+  <a href="/manager/activity/apltutor" class="item ">APL_Tutor 별</a>
+  <a href="/manager/activity/company" class="item ">기업(수강생)현황</a>
+  <a href="/manager/activity/kpi" class="item ">ActionKPI 관리/통계</a>
+  <a href="/manager/activity/survey" class="item ">설문관리</a>
+  <a href="/manager/activity/tutor" class="item ">강사</a>
+  <a class="item active">통계</a>
+
+  <!-- <div class="right menu" style="padding:0;">
+    <div class="item" style="padding:0;">
+      <div class="ui icon input">
+        <input type="text" placeholder="Search...">
+        <i class="search link icon"></i>
+      </div>
+    </div>
+  </div> -->
+</div>
+
+
+
+
+
+
+<!-- 리스트 -->
+<!-- 검색 -->
+<div class="ui secondary  menu" style="padding:0;">
+  <div class=" menu" style="padding:0;">
+    <div class="ui form">
+      <div class="field">
+          <div class="ui selection dropdown">
+              <input type="hidden" name="gender">
+              <i class="dropdown icon"></i>
+              <div class="default text">승인요청과정</div>
+              <div class="menu">
+                  <div class="item" data-value="1">승인요청과정</div>
+                  <div class="item" data-value="2">강의진행대기과정</div>
+                  <div class="item" data-value="2">비유효과정</div>
+              </div>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+<table class="ui single line table celled">
+
+    <thead>
+        <tr>
+            <th>No</th>
+            <th>신청일</th>
+            <th>APL Tutor</th>
+            <th>액션러닝기간</th>
+            <th>강의명</th>
+            <th>강의시간</th>
+            <th>인원</th>
+            <th>연락처</th>
+            <th>승인관리</th>
+        </tr>
+    </thead>
+    <tbody>
+    <% for(var ii=1; ii<=10; ii++){ %>
+        <tr>
+            <td><%=ii%></td>
+            <td>2018.01.05</td>
+            <td>김병윤</td>
+            <td>2017.01.01~2017.01.05</td>
+            <td><a href="#">우리히사 감성안전 지킴이</a></td>
+            <td>12시간(3일)</td>
+            <td>35명</td>
+            <td>010-2222-2222</td>
+            <td>
+                <button type="button" class="button" id="prof">승인하기</button>
+            </td>
+        </tr>
+    <% } %>
+    </tbody>
+</table>
+<br>
+<div class="ui two column centered grid">
+  <div class="ui centered pagination menu">
+          <a class="icon item">
+            <i class="left chevron icon"></i>
+          </a>
+          <a class="item">1</a>
+          <a class="item">2</a>
+          <a class="item">3</a>
+          <a class="item">4</a>
+          <a class="icon item">
+            <i class="right chevron icon"></i>
+          </a>
+        </div>
+
+
+</div>
+
+
+
+
+
+</div>
+
+
+
+
+
+<!-- 기업등록 모달 -->
+<div class="ui insertCompany modal">
+    <i class="close icon"></i>
+    <div class="header">강의승인</div>
+    <div class="content">
+
+        <table class="ui single line table celled">
+            <tr>
+                <td>APL강사명</td>
+                <td>APL강사명</td>
+            </tr>
+            <tr>
+                <td>강의명</td>
+                <td>강의명</td>
+            </tr>
+            <tr>
+                <td>액션플랜러닝기간</td>
+                <td>액션플랜러닝기간</td>
+            </tr>
+            <tr>
+                <td>결제여부</td>
+                <td>결제여부</td>
+            </tr>
+            <tr>
+                <td>비고</td>
+                <td>비고</td>
+            </tr>
+        </table>
+
+    </div>
+    <div class="actions">
+        <div class="ui black deny button">닫기</div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    $(document).on('click', '#prof', function() {
+        $('.ui.insertCompany').modal({duration:100}).modal('show');
+    })
+</script>

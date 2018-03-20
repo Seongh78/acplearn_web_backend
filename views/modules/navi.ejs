@@ -1,0 +1,22 @@
+<div id="navi" class="sixteen wide column">
+    <h1 id="logo" class="three wide column" onclick="move('/home')">Acplearn</h1>
+    <!-- <p>Sign in</p>
+    <p>Sign in /</p> -->
+    <ul class="rightMenu right menu">
+        <li><a href="/intro">서비스소개</a></li>
+        <li><a href="/guide">이용가이드</a></li>
+        <li>
+            <a href="#" class="ui dropdown"><i class="user circle icon"></i><i class="dropdown icon"></i>
+            <div class="menu">
+                <% if( user.user.admin_idx ){ %>
+
+                    <div class="item" onclick="move('/manager')">관리자모드</div>
+
+                <% } %>
+                <div class="item">내정보2</div>
+                <div class="item" onclick="move('/users/logout')">로그아웃</div>
+              </div>
+            </a>
+        </li>
+    </ul>
+</div>

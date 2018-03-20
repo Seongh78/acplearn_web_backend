@@ -1,0 +1,259 @@
+<!-- <div id="sideNavi" class="three wide column ui vertical menu">
+    <a class="item " href="#">강의관리</a>
+    <a class="item " href="#">수강신청관리</a>
+    <a class="item " href="#">수료관리</a>
+    <a class="item " href="#">신청자관리</a>
+    <a class="item " href="#">신청이력관리</a>
+</div> -->
+
+<div id="content" class="fourteen wide column">
+    <h1>APL_Activity</h1>
+
+
+<!-- 검색 -->
+<div class="ui secondary  menu" style="padding:0;">
+  <a href="/manager/activity" class="item ">Activity 승인관리</a>
+  <a href="/manager/activity/opened" class="item ">개설중 과정</a>
+  <a href="/manager/activity/ing" class="item ">강의진행중 과정</a>
+  <a href="/manager/activity/complete" class="item ">강의완료 과정</a>
+  <a href="/manager/activity/apltutor" class="item ">APL_Tutor 별</a>
+  <a href="/manager/activity/company" class="item ">기업(수강생)현황</a>
+  <a class="item active">ActionKPI 관리/통계</a>
+  <a href="/manager/activity/survey" class="item ">설문관리</a>
+  <a href="/manager/activity/tutor" class="item ">강사</a>
+  <a href="/manager/activity/default" class="item ">통계</a>
+</div>
+<hr>
+
+
+
+
+
+
+<!-- 리스트 -->
+<!-- 검색 -->
+<div class="ui secondary  menu" style="padding:0;">
+  <div class=" menu" style="padding:0;">
+
+    <div class="ui form">
+      <div class="field">
+          <div class="ui selection dropdown">
+              <input type="hidden" name="gender">
+              <i class="dropdown icon"></i>
+              <div class="default text">2017년</div>
+              <div class="menu">
+                  <% for(var ii=2017; ii>=2000; ii--){ %>
+                  <div class="item" data-value="<%=ii%>"><%=ii%></div>
+                  <% } %>
+              </div>
+          </div>
+      </div>
+    </div>
+    &nbsp;
+    <div class="ui form">
+      <div class="field">
+          <div class="ui selection dropdown">
+              <input type="hidden" name="gender">
+              <i class="dropdown icon"></i>
+              <div class="default text">KPI1 (전체)</div>
+              <div class="menu">
+                  <div class="item" data-value="0">전체</div>
+                  <div class="item" data-value="1">리더십</div>
+                  <div class="item" data-value="2">커뮤니케이션</div>
+                  <div class="item" data-value="3">CS</div>
+                  <div class="item" data-value="4">산업안전</div>
+                  <div class="item" data-value="5">실내안전</div>
+              </div>
+          </div>
+      </div>
+    </div>
+    &nbsp;
+    <div class="ui form">
+      <div class="field">
+          <div class="ui selection dropdown">
+              <input type="hidden" name="gender">
+              <i class="dropdown icon"></i>
+              <div class="default text">KPI2 (전체)</div>
+              <div class="menu">
+                  <div class="item" data-value="0">전체</div>
+                  <div class="item" data-value="1">리더십</div>
+                  <div class="item" data-value="2">커뮤니케이션</div>
+                  <div class="item" data-value="3">CS</div>
+                  <div class="item" data-value="4">산업안전</div>
+                  <div class="item" data-value="5">실내안전</div>
+              </div>
+          </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+<br>
+<br>
+
+<!-- 그래프 -->
+<div id="container" style="min-width: 210px; width:50%; height: 200px; margin: 0 auto"></div>
+
+
+
+
+<br>
+<div class="ui two column centered grid">
+  <div class="ui centered pagination menu">
+          <a class="icon item">
+            <i class="left chevron icon"></i>
+          </a>
+          <a class="item">1</a>
+          <a class="item">2</a>
+          <a class="item">3</a>
+          <a class="item">4</a>
+          <a class="icon item">
+            <i class="right chevron icon"></i>
+          </a>
+        </div>
+
+
+</div>
+
+</div>
+<!--  -->
+
+
+
+
+<script type="text/javascript">
+    $(document).on('click', '#prof', function() {
+        $('.ui.insertCompany').modal({duration:100}).modal('show');
+    })
+</script>
+
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script type="text/javascript">
+
+Highcharts.createElement('link', {
+   href: 'https://fonts.googleapis.com/css?family=Dosis:400,600',
+   rel: 'stylesheet',
+   type: 'text/css'
+}, null, document.getElementsByTagName('head')[0]);
+
+Highcharts.theme = {
+   colors: ['#7cb5ec', '#f7a35c', '#90ee7e', '#7798BF', '#aaeeee', '#ff0066',
+      '#eeaaee', '#55BF3B', '#DF5353', '#7798BF', '#aaeeee'],
+   chart: {
+      backgroundColor: null,
+      style: {
+         fontFamily: 'Dosis, sans-serif'
+      }
+   },
+   title: {
+      style: {
+         fontSize: '16px',
+         fontWeight: 'bold',
+         textTransform: 'uppercase'
+      }
+   },
+   tooltip: {
+      borderWidth: 0,
+      backgroundColor: 'rgba(219,219,216,0.8)',
+      shadow: false
+   },
+   legend: {
+      itemStyle: {
+         fontWeight: 'bold',
+         fontSize: '12px'
+
+      }
+   },
+   xAxis: {
+      gridLineWidth: 1,
+      labels: {
+         style: {
+            fontSize: '15px'
+         }
+      }
+   },
+   yAxis: {
+      minorTickInterval: 'auto',
+      title: {
+         style: {
+            textTransform: 'uppercase'
+         }
+      },
+      labels: {
+         style: {
+            fontSize: '13px'
+         }
+      }
+   },
+   plotOptions: {
+      candlestick: {
+         lineColor: '#404048'
+      }
+   },
+
+
+   // General
+   background2: '#F0F0EA'
+
+};
+
+
+
+// Apply the theme
+Highcharts.setOptions(Highcharts.theme);
+Highcharts.chart('container', {
+    title: {
+        text: ''
+    },
+    credits: {
+        enabled: false
+    },
+    xAxis: {
+        categories: ['1차', '2차', '3차', '4차']
+    },
+    labels: {
+        items: [{
+            // html: 'Total fruit consumption<b>123</b>',
+            style: {
+                left: '50px',
+                top: '18px',
+                color: (Highcharts.theme && Highcharts.theme.textColor) || 'black'
+            }
+        }]
+    },
+    series: [{
+        type: 'column',
+        name: '자가평가',
+        data: [3, 2, 1, 3]
+    }, {
+        type: 'column',
+        name: '팀평가',
+        data: [2, 3, 5, 7]
+    }, {
+        type: 'spline',
+        name: 'Gap',
+        data: [3, 2.67, 3, 6.33],
+        marker: {
+            lineWidth: 2,
+            lineColor: Highcharts.getOptions().colors[3],
+            fillColor: 'white'
+        }
+    }]
+});
+
+
+</script>

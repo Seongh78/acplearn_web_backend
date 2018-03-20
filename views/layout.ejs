@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' type="text/css" />
+    <link rel="stylesheet" type="text/css" href="/semantic/semantic.css">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="/semantic/semantic.min.js"></script>
+  </head>
+
+<style type="text/css">
+html, body{
+    width: 100%;
+    height:100%;
+    padding: 0;
+    margin:0;
+    background-color: #f9f9f9;
+}
+</style>
+
+<body>
+
+
+    <!-- <div id="app" class="ui grid row"> -->
+    <div id="app" class="ui grid ">
+
+
+        <%- include('modules/navi') %>
+        <%- include('modules/sideNavi') %>
+        <!-- <div id="conWrap" class="thirteen wide column"> -->
+        <div class="righ thirteen wide column conWrap right floated" style="height:100%;">
+            <%- content %>
+        </div>
+
+
+    </div>
+
+
+
+
+
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-109822361-1"></script>
+    <script type="text/javascript">
+        // GA
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-109822361-1');
+
+
+        // init
+        $(document).ready(function () {
+            $('.dropdown').dropdown({maxSelections: 3});
+
+        });
+
+        // Link이동
+        function move(ur) {
+            document.location.href=ur;
+        }
+
+        $(window).scroll(function () {
+            height = $(document).scrollTop();
+            if(height>= 65){
+                $('#sideNavi').css('position','fixed');
+            }else{
+                $('#sideNavi').css('position','');
+            }
+
+        });
+
+
+        // 세션스토리지 설정
+        var ss = window.sessionStorage;
+        sessionStorage.clear();
+    </script>
+
+
+
+</body>
+</html>

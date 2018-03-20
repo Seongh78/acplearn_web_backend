@@ -1,0 +1,217 @@
+<!-- <div id="sideNavi" class="three wide column ui vertical menu">
+    <a class="item " href="#">강의관리</a>
+    <a class="item " href="#">수강신청관리</a>
+    <a class="item " href="#">수료관리</a>
+    <a class="item " href="#">신청자관리</a>
+    <a class="item " href="#">신청이력관리</a>
+</div> -->
+
+<div id="content" class="fourteen wide column">
+    <h1>APL_Activity</h1>
+
+
+<!-- 검색 -->
+<div class="ui secondary  menu" style="padding:0;">
+  <a href="/manager/activity" class="item ">Activity 승인관리</a>
+  <a href="/manager/activity/opened" class="item ">개설중 과정</a>
+  <a href="/manager/activity/ing" class="item ">강의진행중 과정</a>
+  <a href="/manager/activity/complete" class="item ">강의완료 과정</a>
+  <a href="/manager/activity/apltutor" class="item ">APL_Tutor 별</a>
+  <a href="/manager/activity/company" class="item ">기업(수강생)현황</a>
+  <a href="/manager/activity/kpi" class="item ">ActionKPI 관리/통계</a>
+  <a class="item active">설문관리</a>
+  <a href="/manager/activity/tutor" class="item ">강사</a>
+  <a href="/manager/activity/default" class="item ">통계</a>
+
+  <!-- <div class="right menu" style="padding:0;">
+    <div class="item" style="padding:0;">
+      <div class="ui icon input">
+        <input type="text" placeholder="Search...">
+        <i class="search link icon"></i>
+      </div>
+    </div>
+  </div> -->
+</div>
+
+
+
+
+
+
+<!-- 리스트 -->
+<!-- 검색 -->
+    <h3>저장된 설문</h3>
+    <a href="#" id="newSurvey">
+        <div class="ui  animated button" tabindex="0" style="width:80px; background:#4374D9; color: #fff;">
+          <div class="visible content "><i class="write icon"></i></div>
+          <div class="hidden content">새 문항</div>
+        </div>
+    </a>
+    <a onclick="confirm('선택한 문항을 삭제하시겠습니까?')">
+        <div class="ui  animated button" tabindex="0" style="width:80px; background:#F15F5F; color: #fff;">
+          <div class="visible content "><i class="sign out icon"></i></div>
+          <div class="hidden content">삭제</div>
+        </div>
+    </a>
+
+    <table class="ui celled table">
+        <colgroup>
+            <col width="5%">
+        </colgroup>
+        <tbody>
+        <tr>
+            <td><input type="checkbox" name="" value=""></td>
+            <td >
+                <h5> 본 교육에 대해 전반적으로 만족하십니까?</h5>
+                <p>매우아니다 / 아니다 / 보통이다 / 그렇다 / 매우그렇다</p>
+            </td>
+        </tr>
+        <tr>
+            <td><input type="checkbox" name="" value=""></td>
+            <td >
+                <h5> 본 교육에서 불편한 점이 있었다면 무엇입니까?</h5>
+                <p>시설 / 강사 / 강의내용 / 시간 / 기타(직접입력)</p>
+            </td>
+        </tr>
+        <tr>
+            <td><input type="checkbox" name="" value=""></td>
+            <td >
+                <h5> 강사에 대한 평점은 몇점인가요?</h5>
+                <p>1점 / 2점 / 3점 / 4점 / 5점</p>
+            </td>
+        </tr>
+        <tr>
+            <td><input type="checkbox" name="" value=""></td>
+            <td >
+                <h5> 본 교육에 추가되었으면 하는 바람이 있다면 적어주세요</h5>
+                <p>(직접입력)</p>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+
+
+<br>
+<div class="ui two column centered grid">
+  <div class="ui centered pagination menu">
+          <a class="icon item">
+            <i class="left chevron icon"></i>
+          </a>
+          <a class="item">1</a>
+          <a class="item">2</a>
+          <a class="item">3</a>
+          <a class="item">4</a>
+          <a class="icon item">
+            <i class="right chevron icon"></i>
+          </a>
+        </div>
+
+      <input type="file" id="studentsFile" style="display:none;">
+</div>
+<br>
+<br>
+
+
+
+
+
+
+<!-- 모달 -->
+<div class="ui modal">
+    <i class="close icon"></i>
+    <div class="header">설문 문항추가</div>
+    <div class="content">
+        <table class="ui celled table form">
+            <colgroup>
+                <col width="10%">
+                <col width="45%">
+                <col width="45%">
+            </colgroup>
+                <tr>
+                    <td>질문</td>
+                    <td colspan="2"><input type="text" name="" value="" placeholder="질문을 입력해 주세요"></td>
+                </tr>
+                <tr>
+                    <td>답변유형</td>
+                    <td colspan="2">
+                        <input type="radio" name="qtype" id="q2" checked="true"><label for="q2">객관식</label>
+                        <input type="radio" name="qtype" id="q1"><label for="q1">주관식</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>답변유형</td>
+                    <td>
+                        <p style="background:#f1f1f1;">
+                            <input type="checkbox"  style="margin-top:4px;">
+                            중복선택가능
+                        </p>
+                        <p>
+                            <input type="checkbox"  style="margin-top:10px;" checked="true">
+                            <input type="text" style="width:70%; height:32px;" value="매우 아니다">
+                        </p>
+                        <p>
+                            <input type="checkbox"  style="margin-top:10px;" checked="true">
+                            <input type="text" style="width:70%; height:32px;" value="아니다">
+                        </p>
+                        <p>
+                            <input type="checkbox"  style="margin-top:10px;" checked="true">
+                            <input type="text" style="width:70%; height:32px;" value="보통이다">
+                        </p>
+                        <p>
+                            <input type="checkbox"  style="margin-top:10px;" checked="true">
+                            <input type="text" style="width:70%; height:32px;" value="그렇다">
+                        </p>
+                        <p>
+                            <input type="checkbox"  style="margin-top:10px;" checked="true">
+                            <input type="text" style="width:70%; height:32px;" value="매우 그렇다">
+                        </p>
+                    </td>
+                    <td style="background:#fbfbfb;">
+                        <p>
+                            <input type="radio" name="qaa" id="aa1" checked="true">
+                            <label for="aa1"> 매우아니다 / 아니다 / 보통이다 / 그렇다 / 매우그렇다</label>
+                        </p>
+                        <hr>
+                        <p>
+                            <input type="radio" name="qaa" id="aa2">
+                            <label for="aa2"> 있다 / 없다</label>
+                        </p>
+                        <hr>
+                        <p>
+                            <input type="radio" name="qaa" id="aa3">
+                            <label for="aa3"> 매우불만족 / 불만족 / 보통 / 만족 / 매우만족</label>
+                        </p>
+                        <hr>
+                        <p>
+                            <input type="radio" name="qaa" id="aa4">
+                            <label for="aa4"> 매우부정적 / 부정적 / 보통 / 긍정적 / 매우긍적적</label>
+                        </p>
+                        <hr>
+                        <p>
+                            <input type="radio" name="qaa" id="aa5">
+                            <label for="aa5"> 직접입력</label>
+                        </p>
+                        <button type="button" class="ui button">적용</button>
+                    </td>
+                </tr>
+        </table>
+    </div>
+    <div class="actions">
+        <div class="ui black deny button">닫기</div>
+        <div class="ui positive right labeled icon button">
+            적용하기<i class="checkmark icon"></i>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    $(document).on('click', '#prof', function() {
+        $('.ui.insertCompany').modal({duration:100}).modal('show');
+    })
+
+    $(document).on('click', '#newSurvey', function() {
+        $('.ui.modal').modal({duration:100}).modal('show');
+    })
+</script>

@@ -1,0 +1,41 @@
+<%- include('../../modules/tabmenu')%>
+
+
+<div class="" style="padding:3%;">
+    <h3>NEW ACTION PLAN - 기간설정</h3>
+    <!-- <hr> -->
+    <form class="ui form" style="padding-top:10%;">
+
+      <div class="field">
+        <label>목표</label>
+        <input type="text" name="first-name" placeholder="목표를 입력해 주세요"  >
+        <br>
+        <br>
+        <div class="ui toggle checkbox">
+          <input type="checkbox" tabindex="0" name="confirm" class="hidden" checked>
+          <label>공개</label>
+        </div>
+      </div>
+
+      <br>
+      <br>
+
+      <div class="field">
+        <label>수행기간</label>
+        <input type="date" name="first-name" placeholder="목표를 입력해 주세요"  style="width:48%;">
+        <input type="date" name="first-name" placeholder="목표를 입력해 주세요"  style="width:48%;">
+      </div>
+
+      <div class="field">
+        <label>수행단계</label>
+        <input type="number" name="first-name" value="1"  style="width:20%;">
+      </div>
+
+
+    </form>
+
+    <div class="" style="margin-top:25%; width:100%; text-align:center;">
+        <button type="button" class="ui basic button" style=""><i class="icon chevron left"></i> 뒤로</button>
+        <a href="/m/user/actionplan/design/step2"> <button type="button" class="ui blue button" style="">다음 <i class="icon chevron right"></i></button></a>
+    </div>
+</div>

@@ -1,0 +1,160 @@
+<div id="content" class="fourteen wide column">
+<h4 class="ui header">공지사항 > 상세보기</h4>
+<hr>
+<h1 class="ui header"><%=notice.notice_title%></h1>
+    <table class="ui celled table">
+        <colgroup>
+            <col width="12%;">
+            <col width="30%;">
+            <col width="12%;">
+            <col width="19%;">
+            <col width="12%;">
+            <col width="15%;">
+        </colgroup>
+        <tbody>
+            <tr>
+                <td><b>등록일</b></td>
+                <td><b><%=notice.notice_date%></b></td>
+                <td><b>작성자</b></td>
+                <td><b><%=notice.notice_writer%></b></td>
+                <td><b>조회수</b></td>
+                <td><b>120회</b></td>
+            </tr>
+        </tbody>
+    </table>
+<!-- <hr> -->
+
+<div class="ui top attached tabular menu">
+  <a class="item active" data-tab="first">내용</a>
+  <a class="item" data-tab="second">댓글</a>
+</div>
+
+
+
+<!-- 탭1 -->
+<div class="ui bottom attached tab segment active" data-tab="first">
+    <p><%=notice.notice_text%></p>
+    <br>
+</div>
+
+
+
+<!-- 탭2 -->
+<div class="ui bottom attached tab segment comments" data-tab="second">
+      <!-- <h3 class="ui dividing header">Comments</h3> -->
+      <div class="comment">
+        <a class="avatar">
+          <img src="https://semantic-ui.com/images/avatar/small/matt.jpg">
+        </a>
+        <div class="content">
+          <a class="author">Matt</a>
+          <div class="metadata">
+            <span class="date">Today at 5:42PM</span>
+          </div>
+          <div class="text">
+            How artistic!
+          </div>
+          <div class="actions">
+            <a class="reply">Reply</a>
+          </div>
+        </div>
+      </div>
+      <div class="comment">
+        <a class="avatar">
+          <img src="https://semantic-ui.com/images/avatar/small/elliot.jpg">
+        </a>
+        <div class="content">
+          <a class="author">Elliot Fu</a>
+          <div class="metadata">
+            <span class="date">Yesterday at 12:30AM</span>
+          </div>
+          <div class="text">
+            <p>This has been very useful for my research. Thanks as well!</p>
+          </div>
+          <div class="actions">
+            <a class="reply">Reply</a>
+          </div>
+        </div>
+        <div class="comments">
+          <div class="comment">
+            <a class="avatar">
+              <img src="https://semantic-ui.com/images/avatar/small/jenny.jpg">
+            </a>
+            <div class="content">
+              <a class="author">Jenny Hess</a>
+              <div class="metadata">
+                <span class="date">Just now</span>
+              </div>
+              <div class="text">
+                Elliot you are always so right :)
+              </div>
+              <div class="actions">
+                <a class="reply">Reply</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="comment">
+        <a class="avatar">
+          <img src="https://semantic-ui.com/images/avatar/small/joe.jpg">
+        </a>
+        <div class="content">
+          <a class="author">Joe Henderson</a>
+          <div class="metadata">
+            <span class="date">5 days ago</span>
+          </div>
+          <div class="text">
+            Dude, this is awesome. Thanks so much
+          </div>
+          <div class="actions">
+            <a class="reply">Reply</a>
+          </div>
+        </div>
+      </div>
+      <form class="ui reply form">
+        <div class="field">
+          <textarea></textarea>
+        </div>
+        <div class="ui blue labeled submit icon button">
+          <i class="icon edit"></i> 등록
+        </div>
+      </form>
+
+</div>
+
+
+
+<!-- BTNs -->
+<div class="two wide column">
+    <button type="button" class="ui primary button" onclick="move('/manager/notices/edit/<%=notice.notice_idx%>')">수정</button>
+    <button type="button" class="ui red button delete">삭제</button>
+</div>
+
+<script type="text/javascript">
+    $('.menu .item').tab();
+
+    $(document).on('click', '.delete', function() {
+        if (confirm('해당 공지사항을 삭제하시겠습니까?')) {
+            $.ajax({
+                url: '/manager/notices/<%=notice.notice_idx%>',
+                type: 'delete',
+                success: function(resp) {
+                    if (resp.result===500) {
+                        alert('사소한 문제가 발생했습니다 :(  다시 한번 시도해 주세요');
+                        return false;
+                    }
+                    location.href="/manager/notices";
+                }
+            })
+        }
+    })
+</script>
+
+
+
+
+
+
+
+</div>

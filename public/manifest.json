@@ -1,0 +1,6 @@
+{
+  "short_name": "Acplearn",
+  "display":"standalone",
+  "name": "First PWA",
+  "start_url": "/m/tutor"
+}

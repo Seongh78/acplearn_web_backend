@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="stylesheet" type="text/css" href="/semantic/semantic.css">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"
+      integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+      crossorigin="anonymous"></script>
+    <script src="/semantic/semantic.js"></script>
+
+  </head>
+
+<style media="screen">
+    html, body{
+        width: 100%;
+        height:100%;
+        background-color: #f8f8f8;
+    }
+
+
+
+
+
+</style>
+
+  <body>
+
+
+    <div id="app" class="ui grid">
+
+        <div class="four wide column centered" style="margin-top:55px;">
+            <h1 class="centered" style="text-align:center; font-size:2.75em; margin-bottom:30px;">Acplean</h1>
+        <div class="cardbox" style="margin-top:55px; margin:0;">
+
+            <form class="ui form">
+              <div class="field">
+                <input id="usr_id" type="text" name="first-name" value="adad" placeholder="아이디를 입력해 주세요">
+              </div>
+              <div class="field">
+                <input id="usr_pw" type="password" name="last-name" value="adad" placeholder="패스워드를 입력해 주세요">
+              </div>
+              <div class="field">
+                <div class="ui checkbox">
+                  <input type="checkbox" tabindex="0" class="hidden">
+                  <label>아이디 기억하기</label>
+                </div>
+              </div>
+              <button class="ui button basic" style="width:100%;" type="submit">로그인</button>
+            </form>
+            <p style="margin-top:10px;">아직 회원이 아니라면 <a href="/join_agree" style="text-decoration:underline; font-weigt:bold;"> 간편 회원가입 </a></p>
+        </div>
+        <br>
+        <div class="cardbox" style=" margin-top:55px; margin:0;">
+                <form class="ui form">
+                    <button class="ui button blue" onclick="move('/users/auth/facebook')" style="width:100%; margin-top:10px;" type="button">페이스북</button>
+                    <button class="ui button green" onclick="move('/users/auth/naver')" style="width:100%; margin-top:10px;" type="button">네이버</button>
+                    <button class="ui button yellow" onclick="move('/users/auth/kakao')" style="width:100%; margin-top:10px;" type="button">카카오</button>
+                </form>
+        </div>
+
+        </div>
+
+    </div>
+
+
+
+
+
+    <script type="text/javascript">
+        $('.form').on('submit', function() {
+            var id = $('#usr_id').val();
+            var pw = $('#usr_pw').val();
+
+            if ( id == undefined || id=='' ||
+                 pw==undefined || pw=='') {
+                alert('아이디 또는 패스워드를 입력해 주세요');
+                return false;
+            }
+
+            $.ajax({
+                type: "post",
+                url: "api/admin/login",
+                data: {
+                    id:id, pw:pw
+                },
+                success: function(resp) {
+                    console.log(resp);
+                    if(resp.message=='fail'){
+                        alert('아이디 또는 패스워드를 한번 더 확인해 주세요');
+                        return false;
+                    }
+                    location.href="/";
+                }
+            });
+            return false;
+        });
+
+        function move(ur) {
+            document.location.href=ur;
+        }
+    </script>
+
+
+
+
+  </body>
+</html>

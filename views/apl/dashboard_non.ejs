@@ -1,0 +1,141 @@
+
+
+<h1 class="ui header">대시보드</h1>
+
+<div class="ui grid">
+
+<div class="ten wide column cardbox">
+    <h3>공지사항</h3>
+    <hr>
+    <table class="ui very basic table">
+      <thead>
+        <tr>
+          <th>강의명</th>
+          <th>일시</th>
+          <th>결과</th>
+        </tr>
+      </thead>
+      <tbody>
+          <% for(var ii=0; ii<4; ii++){ %>
+        <tr>
+          <td>2017년 3차 APL자격 취득 강사 양성교육</td>
+          <td>2018-01-05 ~ 2018-01-08</td>
+          <td>모집중</td>
+        </tr>
+        <% }%>
+      </tbody>
+    </table>
+</div>
+
+
+
+
+
+<div class="cardbox five wide column" style="overflow: hidden;">
+    <h3>강의현황</h3>
+    <hr>
+
+    <div class="">
+        <table class="ui very basic table">
+          <thead>
+            <tr>
+              <th class="center aligned">전체</th>
+              <th class="center aligned">진행</th>
+              <th class="center aligned">예정</th>
+              <th class="center aligned">종료</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="center aligned"><h3>17건</h3></td>
+              <td class="center aligned"><h3>2건</h3></td>
+              <td class="center aligned"><h3>3건</h3></td>
+              <td class="center aligned"><h3>12건</h3></td>
+            </tr>
+            <tr>
+          </tbody>
+        </table>
+    </div>
+    <div class="" style="margin-top:30px; padding:15px; text-align:center;">
+        <button class="ui button">전체보기</button>
+        <button class="ui primary button" onclick="move('/lectures/new/summary')">강의개설</button>
+    </div>
+</div>
+<!-- <div class="five wide column cardbox">
+    <h4>프로필</h4>
+    <hr>
+    <table>
+        <colgroup>
+            <col width="25%">
+        </colgroup>
+        <tr>
+            <td rowspan="2"><img class="ui image" width="95%" src="https://semantic-ui.com/images/avatar/large/steve.jpg"></td>
+            <td><h3>박길동</h3></td>
+        </tr>
+        <tr>
+            <td>Lorem ipsum dolor sit amet</td>
+        </tr>
+    </table>
+    <div class="">
+
+    </div>
+</div> -->
+
+
+
+
+<div class="ten wide column cardbox">
+    <h3>종료된 강의</h3>
+    <hr>
+    <table class="ui very basic table">
+      <thead>
+        <tr>
+          <th>강의명</th>
+          <th>강의기간</th>
+          <th>현황</th>
+        </tr>
+      </thead>
+      <tbody>
+          <% for(var ii=0; ii<4; ii++){ %>
+        <tr>
+          <td>2017년 3차 APL자격 취득 강사 양성교육</td>
+          <td>2018-01-05 ~ 2018-01-08</td>
+          <td>모집중</td>
+        </tr>
+        <% }%>
+      </tbody>
+    </table>
+</div>
+
+
+
+
+<div class="five wide column cardbox">
+    <h3>공지사항</h3>
+    <hr>
+    <table class="ui very basic table">
+  <thead>
+    <tr>
+      <th>제목</th>
+      <th>등록일</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% for(var ii=0; ii<4; ii++){ %>
+    <tr>
+      <td>서비스점검으로 인하여..</td>
+      <td>2018-01-01</td>
+    </tr>
+    <% } %>
+  </tbody>
+</table>
+</div>
+
+
+
+
+
+
+
+
+</div>

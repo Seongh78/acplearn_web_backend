@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+    </head>
+    <body>
+
+
+<div id="example-1">
+	<a href="#">이름</a>
+    <button type="button" @click.once="cc">cc</button>
+	<ul>
+		<li v-for="post in posts">
+			<span>{{ post.id }}</span> /
+			<span>{{ post.title }}</span>
+		</li>
+	</ul>
+</div>
+
+
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.23.0/polyfill.min.js"></script>
+<!-- orderBy 옵션 -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
+<!-- json import -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.min.js"></script>
+<!-- vue.js -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.3.4/vue.min.js"></script>
+
+
+<script type="text/javascript">
+    // dummyDataBinding = new Vue({
+    new Vue({
+    	el: '#example-1',
+    	data: {
+    		posts: [],
+    		errors: []
+    	},
+
+    	// Fetches posts when the component is created.
+    	created: function () {
+    		axios.get('https://jsonplaceholder.typicode.com/posts')
+            .then(function(response){
+    			this.posts = response.data
+    		}
+            .bind(this))
+    		.catch(function(e) {
+    			this.errors.push(e)
+    		});
+    		// console.log(this.posts)
+    	},
+    	computed: {
+    		reverse: function() {
+    			return this.posts.reverse();
+    		},
+
+    		orderedUsers: function () {
+    			return _.orderBy(this.posts, 'first_name')
+    		}
+    	},
+    	methods: {
+            cc:asd
+    	}
+    });
+
+    function asd() {
+        alert(1);
+    }
+</script>
+
+    </body>
+</html>

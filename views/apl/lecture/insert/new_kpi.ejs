@@ -1,0 +1,128 @@
+<div>
+
+
+    <!-- 타이틀 -->
+    <div class="cardbox" style="margin:10px 0; padding:25px; ">
+        <h2>KPI설정</h2>
+    </div>
+
+
+    <!-- 컨텐츠 -->
+    <div class="cardbox ui grid" style="margin:0; padding:25px;">
+
+        <!-- 좌측 -->
+        <div class="nine wide column" style="height:600px; overflow:scroll; border:1px solid #f2f2f2;">
+
+            <div class="" v-for="(kpi, kpiIndex) in kpiGroup">
+                <h3>{{ kpi.title }}</h3>
+                <div class="ui form" >
+                    <div class="ui checkbox" v-for="(item, listIndex) in kpi.list">
+                      <input type="checkbox" v-bind:id="item" v-bind:name="item" v-bind:value="item" v-model="checkedKPI">
+                      <label :for="item">{{ item }}&nbsp;&nbsp;</label>
+                    </div>
+                </div>
+                <br>
+                <hr style="opacity:0.15">
+                <br>
+            </div>
+
+            <!-- 직접입력 -->
+            <!-- <div class="">
+                <h3>직접입력</h3>
+                <div class="ui form">
+                    <div class="inline field">
+                        <input type="text" placeholder="KPI를 입력해 주세요" >
+                        <button type="button" class="ui button green">확인</button>
+                    </div>
+                </div>
+            </div> -->
+
+
+        </div>
+        <!-- /좌측 -->
+
+
+        <!-- 우측 -->
+        <div class="seven wide column" style="height:600px; overflow:scroll; border:1px solid #f2f2f2;">
+            <div class="">
+                <a class="ui label large" v-for="(kpi, index) in checkedKPI">{{kpi}}<i class="delete icon" @click="unCheck(index)"></i></a>
+            </div>
+        </div>
+        <!-- /우측 -->
+
+
+        <br>
+        <br>
+    </div>
+    <!-- 컨텐츠 -->
+
+
+
+    <!-- 하단 -->
+    <div class="cardbox" style="margin:10px 0; padding:25px; text-align:center;">
+        <button class="ui button" @click="save">저장</button>
+        <button class="ui primary button" onclick="move('/lectures/new/students')">다음페이지</button>
+    </div>
+
+
+
+</div>
+<!-- END -->
+
+
+<script type="text/javascript">
+
+
+
+
+
+        // Vue
+        var vapp = new Vue({
+            el: '#app',
+            data() {
+                return{
+                    kpiGroup: [
+                        {
+                            title: '리더십',
+                            list: ['리더십', '커뮤니케이션', '팔로워십', '조직활성화']
+                        },
+                        {
+                            title: 'CS',
+                            list: ['인사', '상담', '서비스마인드', '고객응대']
+                        },
+                        {
+                            title: '산업안전',
+                            list: ['화제안전', '실내안전', '전기안전', '현장점검']
+                        }
+                    ],
+                    checkedKPI:[],
+                    checkedKPI2:[]
+                }
+            },
+
+
+
+            mounted(){
+                let kpi = JSON.parse(sessionStorage.getItem('lecture-kpi'));
+                this.checkedKPI = (kpi ==null) ? [] : kpi;
+            },
+
+
+            methods: {
+                // 체크해제 클릭 시
+                unCheck(id){
+                    this.checkedKPI.splice(id, 1)
+                },
+
+                // 저장
+                save(){
+                    sessionStorage.setItem('lecture-kpi', JSON.stringify(this.checkedKPI));
+                    alert('KPI가 저장되었습니다.')
+                    move('/lectures/new/students')
+                }
+
+            }// method()
+
+        })//vapp
+
+</script>

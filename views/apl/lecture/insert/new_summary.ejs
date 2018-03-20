@@ -1,0 +1,239 @@
+<div id="" class="">
+
+        <!-- 타이틀 -->
+        <div class="cardbox" style="margin:10px 0; padding:25px; ">
+            <h2>강의개요 <small><button id="loadTemplate" class="ui button" v-on:click.prevent="modal">강의템플릿</button> <button id="loadTemplate" class="ui button" v-on:click.prevent="savedLecture">임시저장 강의</button></small></h2>
+        </div>
+
+        <!-- 컨텐츠 -->
+        <div class="cardbox" style="margin:0; padding:25px; ">
+
+            <table class="ui table celled form centerLayout">
+                <colgroup>
+                    <col width="8.5%">
+                    <col width="60%">
+                </colgroup>
+                <tr>
+                    <th>강의제목</th>
+                    <td><input type="text" placeholder="제목을 입력해 주세요" style="width:95%;" v-model="summary.lec_title"></td>
+                </tr>
+                <tr>
+                    <th class="borderTop">강의목적</th>
+                    <td><textarea style="width:95%;" rows="6" placeholder="내용을 입력해 주세요" v-model="summary.lec_goal"></textarea></td>
+                </tr>
+                <tr>
+                    <th class="borderTop">내용</th>
+                    <td><textarea style="width:95%;" rows="6" placeholder="내용을 입력해 주세요" v-model="summary.lec_content"></textarea></td>
+                </tr>
+                <tr>
+                    <th class="borderTop">기대효과</th>
+                    <td><textarea style="width:95%;" rows="6" placeholder="내용을 입력해 주세요" v-model="summary.lec_effect"></textarea></td>
+                </tr>
+
+                <tr>
+                    <th class="borderTop">계획서/자료</th>
+                    <td>
+                        <input id="file" type="file" placeholder="제목을 입력해 주세요" style="width:85%;" v-model="summary.lec_introFile">
+                        <button type="button" for="file" class="ui primary button" style="width:10%; height:42.5px;">추가</button>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+
+        <!-- 하단버튼 -->
+        <div class="cardbox" style="margin:10px 0; padding:25px; text-align:center;">
+            <button class="ui button">템플릿으로 저장</button>
+            <button class="ui button" v-on:click.prevent="save">저장</button>
+            <button class="ui primary button" onclick="move('/lectures/new/aplterm')">다음페이지</button>
+        </div>
+        <!-- content -->
+
+
+
+
+
+
+<!-- 모달 -->
+<modal-window class="lecTemplate" mtitle="강의 템플릿">
+    <table class="ui celled table">
+        <colgroup>
+            <col width="5%">
+            <col width="80%">
+        </colgroup>
+          <thead>
+            <tr>
+              <th></th>
+              <th>강의명</th>
+              <th>내용</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="checkbox" name="" value=""></td>
+              <td>Approved</td>
+              <td>
+                  <button class="ui button">상세보기</button>
+              </td>
+            </tr>
+          </tbody>
+    </table>
+</modal-window>
+
+
+<modal-window class="savedLectures" mtitle="임시저장 강의">
+    <div class="content">
+        <h4>임시 저장 중인 강의가 <span style="color:red;">{{temp_summary.length}}</span>건 있습니다.</h4>
+            <table class="ui celled table">
+                <colgroup>
+                    <col width="5%">
+                    <col width="40%">
+                </colgroup>
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>강의명</th>
+                      <th>분야</th>
+                      <th>저장날짜</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="temp in temp_summary">
+                      <td><input type="radio" v-bind:value="temp.lec_idx" v-model="summaryImport" ></td>
+                      <td>{{temp.lec_title}}</td>
+                      <td>
+                          산업안전
+                      </td>
+                      <td>{{temp.lec_start_date}}</td>
+                    </tr>
+                  </tbody>
+            </table>
+    </div>
+    <div class="actions">
+        <div class="ui black deny button">닫기</div>
+        <div class="ui positive right labeled icon button" @click.prevent="summaryApply">
+        {{ closeMsg }}<i class="checkmark icon"></i>
+        </div>
+    </div>
+</modal-window>
+
+
+
+
+
+
+
+</div>
+<!-- Lyot end -->
+
+
+
+
+
+
+
+<script type="text/javascript">
+
+    // Vue
+    new Vue({
+        el: '#app',
+        data: {
+            summaryImport:null,
+            closeMsg:'적용',
+            summary: {},
+            temp_summary:{},
+            errors: [],
+            gt(){
+                axios.get('/api/lectures/temp').then((resp)=>{
+                    console.log(resp.data.data);
+                    if (resp.data.data!='') {
+                        this.temp_summary = resp.data.data;
+                        onModal('savedLectures');
+                        return;
+                    }
+                });//ajax
+            }
+        },
+
+        // computed: {
+        //     reverse: function() {
+        //         return this.lecture.reverse();
+        //     },
+        //
+        //     orderedUsers: function () {
+        //         return _.orderBy(this.lecture, 'first_name')
+        //     }
+        // },
+
+
+        created: function () {
+
+        },
+
+        mounted(){
+            // this.summary.lec_title="123";
+            // 임시저장 중인 강의가 있을 시 목록 선택화면 출력
+            let lec = sessionStorage.getItem('lecture-summary');
+            if(lec){
+                this.summary = JSON.parse(lec);
+                return;
+            }
+            this.gt();
+
+        },
+
+
+        methods: {
+            modal() { // 모달
+                onModal('lecTemplate');
+            },
+
+            savedLecture(){
+                    this.gt();
+            },
+
+            summaryApply(){
+                var url = '/api/lectures/temp/'+this.summaryImport;
+                // alert(url)
+                axios.get(url).then((resp)=>{
+                    console.log(resp.data.data);
+                    this.summary = resp.data.data;
+                    // 세션스토리지에 저장
+
+                    sessionStorage.setItem('lecture-id', this.summary.lec_idx);
+                    sessionStorage.setItem('lecture-summary', JSON.stringify(this.summary));
+                });
+            },
+
+            save(){ //저장
+                var url = '/api/lectures/application/summary';
+                axios.post(url, this.summary).then((resp)=>{
+                    // console.log(resp);
+                    if (resp.status !== 200) {
+                        alert('사소한 문제가 발생했습니다. 다시 시도해 주세요 :(');
+                        return;
+                    }
+                    console.log(resp);
+                    alert('저장되었습니다.');
+                    return;
+                    location.href= "/lectures/new/aplterm";
+                });
+            }//save()
+        }
+
+
+
+    });
+
+    function gt() {
+        axios.get('/api/lectures/temp').then((resp)=>{
+            console.log(resp.data.data);
+            if (resp.data.data!='') {
+                this.temp_summary = resp.data.data;
+                onModal('savedLectures');
+                return;
+            }
+        });//ajax
+    }
+
+</script>

@@ -1,0 +1,59 @@
+<%- include('modules/tabmenu')%>
+
+
+<div class="ui vertical stripe quote segment" >
+    <div class="left aligned row" style="font-size:70%; padding:10px 3px; ">
+
+
+        <% for(var ii=1; ii<=6; ii++){  %>
+        <div class=" cardbox" onclick="location.href='/m/user/myplan/<%=ii%2!=0?'detail':'detail_self'%>'" style="cursor:pointer;">
+            <h4>
+                <% if(ii%2!=0){ %>
+                    <div class="ui right pointing orange basic label mini" >1회차</div>
+                <% }else{ %>
+                    <div class="ui right pointing blue basic label mini" >1단계</div>
+                <% } %>
+                우리회사 감성안전 지킴이 <small>[<%=(ii%2!=0? '교육플랜':'공개플랜')%>]</small>
+            </h4>
+            <h5>기간: [1회차] 2017.01.01~2017.01.05</h5>
+
+            <div class="ui list">
+              <div class="item">
+                <label for="">진행률</label>
+                <div class="content">
+                  <div class="ui progress standard">
+                    <div class="bar">
+                      <div class="progress"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="item">
+                <label for="">참여율</label>
+                <div class="content">
+                  <div class="ui progress standard">
+                    <div class="bar">
+                      <div class="progress"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p>
+                <b>다짐글: </b>50
+                &nbsp;&nbsp;&nbsp;
+                <b>평가글: </b>50
+                &nbsp;&nbsp;&nbsp;
+                <b>응원글: </b>50
+                &nbsp;&nbsp;&nbsp;
+                <b>응원자: </b>50
+            </p>
+        </div>
+        <% } %>
+
+
+
+
+     </div>
+ </div>

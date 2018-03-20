@@ -1,0 +1,85 @@
+<div id="content" class="fourteen wide column">
+    <h1>공지사항</h1>
+
+
+
+
+
+<!-- 검색 -->
+<div class="ui secondary  menu" style="padding:0;">
+  <div class="left menu" style="padding:0;">
+    <div class="item" style="padding:0;">
+      <div class="ui icon input">
+        <input type="text" placeholder="Search...">
+        <i class="search link icon"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<!-- 리스트 -->
+<table class="ui single line table">
+    <colgroup>
+        <col width="5%">
+        <col width="53%">
+        <col width="10%">
+        <col width="10%">
+        <col width="10%">
+    </colgroup>
+    <thead>
+        <tr>
+            <th>No</th>
+            <th>제목</th>
+            <th style="text-align:center;">등록일</th>
+            <th style="text-align:center;">작성자</th>
+            <th style="text-align:center;">조회수</th>
+        </tr>
+    </thead>
+    <tbody>
+    <% notices.forEach(function(notice, index){ %>
+        <tr>
+            <td><%=notice.notice_idx%></td>
+            <td><a href="/manager/notices/<%=notice.notice_idx%>"><%=notice.notice_title%></a></td>
+            <td style="text-align:center;"><%=notice.notice_date%></td>
+            <td style="text-align:center;"><%=notice.notice_writer%></td>
+            <td style="text-align:center;"><%=index%></td>
+        </tr>
+    <% }); %>
+    </tbody>
+</table>
+
+
+<br>
+<div class="ui two column centered grid">
+  <div class="ui centered pagination menu">
+          <a class="icon item">
+            <i class="left chevron icon"></i>
+          </a>
+          <a class="item">1</a>
+          <a class="item">2</a>
+          <a class="item">3</a>
+          <a class="item">4</a>
+          <a class="icon item">
+            <i class="right chevron icon"></i>
+          </a>
+        </div>
+
+        <a href="/manager/notices/new">
+        <div class="ui  animated button" tabindex="0" style="position:absolute; right:25px; height:40px; background:#4374D9; color: #fff;">
+          <div class="visible content ">공지등록</div>
+          <div class="hidden content">
+            <i class="right arrow icon"></i>
+          </div>
+        </div></a>
+</div>
+
+
+
+
+
+
+</div>

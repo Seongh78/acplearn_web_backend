@@ -1,0 +1,43 @@
+<div id="sideNavi" class="three wide column ui vertical menu">
+<!-- <div  class="sideNavi three wide column ui vertical menu"> -->
+    <div class="item" style="text-align:center;">
+        <p  style="width:55%;" class="centerLayout">
+            <img class="ui medium circular image" src="<%=(user.user.tutor_img==undefined ? 'https://semantic-ui.com/images/avatar/large/steve.jpg' : user.user.tutor_img)%>">
+        </p>
+        <h3 id="userName"><%=user.user.tutor_name%></h3>
+        <a href="/profile">내 정보</a>
+    </div>
+
+
+    <% if(page == '/dashboard_non' || page=='/detail_non'){ %>
+
+        <div class="item">
+            APL수강정보
+                <div class="menu">
+                  <a href="/dashboard_non" class="item"> - 강의목록</a>
+                  <a href="/application_non" class="item"> - 수강내역</a>
+                </div>
+        </div>
+
+    <% }else{ %>
+
+        <% mm.forEach(function(m){ %>
+            <% if(m.sub!==undefined){ %>
+                <div class="item">
+                    <%=m.title%>
+                        <div class="menu">
+                        <% m.sub.forEach(function(s){ %>
+                          <a href="<%=m.id%><%=s.id%>" class="item <%=(s.id==page?'active':'')%>"> - <%=s.title%></a>
+                        <% }); %>
+                        </div>
+                </div>
+            <% }else{ %>
+                <a class="item <%=(m.id==page?'active':'')%>" href="<%=m.id%>">
+                    <%=m.title%>
+                </a>
+            <% } %>
+        <% }); %>
+
+    <% } %>
+
+</div>

@@ -1,0 +1,50 @@
+
+    <div id="tl" class="ui secondary menu">
+      <a class="active item">
+        <p><b>1차</b><br>2017.12.25</p>
+      </a>
+      <a class="item">
+        <p><b>2차</b><br>2017.12.25</p>
+      </a>
+      <a class="item">
+        <p><b>3차</b><br>2017.12.25</p>
+      </a>
+      <a class="item">
+        <p><b>4차</b><br>2017.12.25</p>
+      </a>
+      <a class="item">
+        <p><b>5차</b><br>2017.12.25</p>
+      </a>
+    </div>
+
+    <table class="ui table celled unstackable" style="font-size:0.8em; padding:0;">
+        <colgroup>
+            <!-- <col width="15%"> -->
+        </colgroup>
+
+        <thead>
+            <tr style="padding:0;">
+                <th style="padding:0; text-align:center;" rowspan="2">이름</th>
+                <th style="padding:0; text-align:center;" rowspan="2">소속</th>
+                <th style="padding:0; text-align:center;" rowspan="2">부서</th>
+                <th style="padding:0; text-align:center;" rowspan="2">직급</th>
+                <th style="padding:0; text-align:center;" colspan="2">출결</th>
+            </tr>
+            <tr>
+                <th style="padding:0; text-align:center;">출석</th>
+                <th style="padding:0; text-align:center;">결석</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% for(var ii=1; ii<8; ii++){ %>
+                <tr>
+                    <td>박길동</td>
+                    <td>(주)액플런</td>
+                    <td>개발팀</td>
+                    <td>팀장</td>
+                    <td><input type="radio" name="a<%=ii%>" value="1" checked></td>
+                    <td><input type="radio" name="a<%=ii%>" value="2" onchange="alert('결석처리 되었습니다.')"></td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
