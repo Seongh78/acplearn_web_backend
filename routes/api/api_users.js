@@ -6,7 +6,7 @@ var LocalStrategy = require('passport-local').Strategy;
 var conn = require('../common/dbconn').connection;
 var ensureAuthenticated = require('../common/passport').ensureAuthenticated;
 var isAuth = require('../common/passport').isAuth;
-var request = require('request');
+
 
 // Redirect to Front-end
 var toFrontUrl = "http://localhost:8080"
