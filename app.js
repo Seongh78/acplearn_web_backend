@@ -22,24 +22,14 @@ var NaverStrategy        = require('passport-naver').Strategy;
 var FacebookStrategy  = require('passport-facebook').Strategy;
 
 
-var index           = require('./routes/index');
-var users           = require('./routes/users');
-var notices        = require('./routes/notices');
-var aplectures   = require('./routes/aplectures');
-var lectures       = require('./routes/lectures');
-var company     = require('./routes/company');
 
 
-var mobile_tutor    = require('./routes/mobile_tutor/index');
-var mobile_user     = require('./routes/mobile_user/index');
 
-var manager                       = require('./routes/manager/index');
-var manager_notices          = require('./routes/manager/notices');
-var manager_aplectures     = require('./routes/manager/aplectures');
 
 // API Router
-var api_notices          = require('./routes/api/api_notices');
+var index          = require('./routes/index');
 
+var api_notices          = require('./routes/api/api_notices');
 var api_recruitment          = require('./routes/api/api_recruitment');
 var api_companies         = require('./routes/api/api_companies');
 var api_lectures              = require('./routes/api/api_lectures');
@@ -48,39 +38,10 @@ var api_templates          = require('./routes/api/api_templates');
 var api_students            = require('./routes/api/api_students');
 var api_administrator    = require('./routes/api/api_administrator');
 
-var me = [
 
-    // {
-    //     title:"APL수강정보",
-    //     id:"/aplectures",
-    //     sub: [
-    //         {title: "수강신청 내역", id: "/application"},
-    //         {title: "수료 내역", id: "/complete"}
-    //     ]
-    // },
-    {
-        title:"강의현황",
-        id:"/lectures",
-        sub: [
-            {title: "진행강의", id: "/status"},
-            {title: "승인중강의", id: "/waiting"},
-            {title: "개설중강의", id: "/open"}
-        ]
-    },
-    {
-        title:"강의안관리", id:"/lectures/template"
-    },
-    {
-        title:"기업정보", id:"/company"
-    },
-    // {
-    //     title:"대시보드", id:"/dashboard"
-    // },
-    {
-        title:"공지사항", id:"/notices"
-    }
-];
 
+
+// Express
 var app = express();
 
 
@@ -109,10 +70,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(fileUpload());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(function(req, res, next) {
-  res.locals.mm = me;
-  next();
-});
+
 
 
 
@@ -144,23 +102,23 @@ app.use(function(req, res, next) {
 
 
 // Web ver
-app.use('/',                    index);
-app.use('/users',           users);
-app.use('/notices',        notices);
-app.use('/aplectures',   aplectures);
-app.use('/lectures',       ensureAuthenticated, lectures);
-app.use('/company',     ensureAuthenticated, company);
+
+// app.use('/users',           users);
+// app.use('/notices',        notices);
+// app.use('/aplectures',   aplectures);
+// app.use('/lectures',       ensureAuthenticated, lectures);
+// app.use('/company',     ensureAuthenticated, company);
 
 
 // Manager module
-app.use('/manager',                          isAdmin, manager);
-app.use('/manager/notices',             isAdmin, manager_notices);
-app.use('/manager/aplectures',        isAdmin, manager_aplectures);
+// app.use('/manager',                          isAdmin, manager);
+// app.use('/manager/notices',             isAdmin, manager_notices);
+// app.use('/manager/aplectures',        isAdmin, manager_aplectures);
 
 
 // Mobile ver
-app.use('/m/tutor',       mobile_tutor);
-app.use('/m/user',        mobile_user);
+// app.use('/m/tutor',       mobile_tutor);
+// app.use('/m/user',        mobile_user);
 
 
 // API
@@ -176,7 +134,7 @@ app.use('/api/admin',              api_administrator); // 수강생 api
 app.use('/api/lectures',            isAuth, api_lectures); //인증X - 테스트중
 app.use('/api/users',                api_users);
 
-
+app.use('/',                    index);
 
 
 
