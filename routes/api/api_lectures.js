@@ -13,12 +13,18 @@ var xlsx = require('node-xlsx');
 var fileUpload = require('express-fileupload');
 
 
+/*
+
+(O) : 완료
+(Dev) : 수정중
+(X) : 수정전
+
+*/
 
 
 
 
-
-// ====== APL강의 목록 ====== //
+// ====== (O) APL강의 목록 ====== //
 router.get('/', (req, res, next)=>{
     let usr_idx = req.user.user.tutor_idx; // 유저아이디
     let q =
@@ -43,16 +49,20 @@ router.get('/', (req, res, next)=>{
         lecParameter.push(req.query.lecType)
     }
 
-    conn.query(q, lecParameter,(e, rows)=>{
-        if (e) {
-            console.log(e);
-            return res.send(500, {result:e, data:{}});
-        }
-        res.send(200, {result:'success', data:rows});
-    })// conn
+
+    pool.getConnection((er, connection)=>{
+        connection.query(q, lecParameter,(e, rows)=>{
+            connection.release()
+            if (e) {
+                console.log(e);
+                return res.send(500, {result:e, data:{}});
+            }
+            res.send(200, {result:'success', data:rows});
+        })// conn
+    }) // pool
 
 });
-// ====== APL강의 목록 ====== //
+// ====== (O) APL강의 목록 ====== //
 
 
 
@@ -64,11 +74,12 @@ router.get('/', (req, res, next)=>{
 
 
 
-// ====== APL강의 삭제 ====== //
+// ====== (O) APL강의 삭제 ====== //
 router.delete('/:id', (req, res, next)=>{
     var usr_idx = req.user.user.tutor_idx; // 유저아이디
     var lec_idx = req.params.id
     var sql = 'DELETE FROM lecture WHERE lec_idx=? and  tutor_idx=?'
+    console.log('lec_idx: ', lec_idx);
     pool.getConnection((er, connection)=>{
         connection.query(sql, [lec_idx, usr_idx], (err, result)=>{
             connection.release()
@@ -81,7 +92,7 @@ router.delete('/:id', (req, res, next)=>{
         })// connection
     })// pool
 })
-// ====== APL강의 삭제 ====== //
+// ====== (O) APL강의 삭제 ====== //
 
 
 
@@ -93,7 +104,7 @@ router.delete('/:id', (req, res, next)=>{
 
 
 
-// ====== 강의상세 ====== //
+// ====== (O) 강의상세 ====== //
 router.get('/dt/:id', (req, res, next)=>{
 
     // 파라미터
@@ -102,12 +113,12 @@ router.get('/dt/:id', (req, res, next)=>{
 
     // 쿼리
     var q={
-        group       : "SELECT * FROM `group` WHERE lec_idx=? ORDER BY group_idx ASC",
-        students   : `SELECT * FROM company C , registration R  WHERE R.lec_idx=? and R.com_code=C.com_code`,
-        companies : 'SELECT * FROM company_manager CM, company C WHERE CM.lec_idx=? and CM.com_code=C.com_code',
-        kpi             : ` SELECT       CC2.cc2_idx, CC2.cc2_name
+        group           : "SELECT * FROM `group` WHERE lec_idx=? ORDER BY group_idx ASC",
+        students       : `SELECT * FROM company C , registration R  WHERE R.lec_idx=? and R.com_code=C.com_code`,
+        companies   : 'SELECT * FROM company_manager CM, company C WHERE CM.lec_idx=? and CM.com_code=C.com_code',
+        kpi                : ` SELECT       CC2.cc2_idx, CC2.cc2_name
                                 FROM        lecture_kpi LK, capability_category2 CC2
-                                WHERE      LK.lec_idx=42 and CC2.cc2_idx=LK.cc2_idx`,
+                                WHERE      LK.lec_idx=? and CC2.cc2_idx=LK.cc2_idx`,
 
         lecture      : `SELECT
                             L.lec_idx 			      as 	lec_idx,
@@ -286,6 +297,8 @@ router.get('/dt/:id', (req, res, next)=>{
                     return res.status(500).send({result : 'kpiErr'})
                 }
 
+                console.log(kpiResult);
+
                 // 참여기업
                 connection.query(q.companies, [lec_idx], (companiesErr, companiesResult)=>{
                     if(companiesErr){ // Error
@@ -332,7 +345,7 @@ router.get('/dt/:id', (req, res, next)=>{
 
 
 })
-// ====== 강의상세 ====== //
+// ====== (O) 강의상세 ====== //
 
 
 
@@ -341,7 +354,12 @@ router.get('/dt/:id', (req, res, next)=>{
 
 
 
-// ====== 강의등록 확인 - complete ====== //
+
+
+
+
+
+// ====== (Dev) 강의등록 확인 - complete ====== //
 router.post('/complete',  (req, res, next)=>{
     // var studentsCount = req.body.completeData.count //학생수
     // var sessionCount = req.body.completeData.sessionCount // 세션수
@@ -364,7 +382,7 @@ router.post('/complete',  (req, res, next)=>{
     }) // pool
 
 })
-// ====== 강의등록 확인 - complete ====== //
+// ====== (Dev) 강의등록 확인 - complete ====== //
 
 
 
@@ -376,13 +394,7 @@ router.post('/complete',  (req, res, next)=>{
 
 
 
-/*
 
-(O) : 완료
-(Dev) : 수정중
-(X) : 수정전
-
-*/
 
 
 
@@ -476,9 +488,28 @@ router.post('/create/aplterm', (req, res, next)=>{
     var tutor_idx = req.user.user.tutor_idx
     var lec_idx = req.body.lec_idx
     var da = req.body.terms
-    var deleteSQL = "DELETE FROM lecture_session WHERE lec_idx=?" // 임시 정보 생성쿼리
-    var lectureSummarySQL = "INSERT INTO  `lecture` SET lec_title=?, tutor_idx=?, lec_flag='임시저장'" // 임시 정보 생성쿼리
-    var lectureSessionSQL = "INSERT INTO  lecture_session( lec_idx, ls_startDate, ls_endDate, ls_location) VALUES ?"
+
+    // 임시 정보 생성쿼리
+    var deleteSQL = `
+    DELETE FROM lecture_session WHERE lec_idx=?`
+
+    // 임시 정보 생성쿼리
+    var lectureSummarySQL = `
+    INSERT INTO  lecture SET
+        lec_title=?,
+        tutor_idx=?,
+        lec_flag='임시저장'`
+
+    // 세션생성쿼리
+    var lectureSessionSQL = `
+    INSERT INTO  lecture_session(
+        lec_idx,
+        ls_startDate,
+        ls_endDate,
+        ls_location,
+        lec_seq
+    )
+    VALUES ?`
 
 
     var tempSessions = [] // 세션
@@ -489,6 +520,7 @@ router.post('/create/aplterm', (req, res, next)=>{
 
     pool.getConnection((er, connection)=>{
         if (er) {
+            console.log(er);
             connection.release()
             throw er
             return
@@ -514,7 +546,7 @@ router.post('/create/aplterm', (req, res, next)=>{
                     da.sessionDetail[ii].ls_startDate,
                     da.sessionDetail[ii].ls_endDate,
                     da.sessionDetail[ii].ls_location,
-                    // time
+                    da.sessionDetail[ii].lec_seq,
                 ])
             }//for
 
@@ -547,7 +579,7 @@ router.post('/create/aplterm', (req, res, next)=>{
                 da.sessionDetail[ii].ls_startDate,
                 da.sessionDetail[ii].ls_endDate,
                 da.sessionDetail[ii].ls_location,
-                // time
+                da.sessionDetail[ii].lec_seq,
             ])
         }//for
 
@@ -691,8 +723,8 @@ router.post('/create/timetable', (req, res, next)=>{
 
             // 시간표가 있을경우 쿼리 실행 or timetableFlag가 참일경우만
             if(tempTimetables.length < 1  ||  tempTimetables == undefined || timetableFlag==false){
-                console.log('endendendendend');
                 connection.release()
+                console.log('endendendendend');
                 res.status(200).send({ msg : 'success'})
                 return
 
@@ -778,10 +810,6 @@ router.post('/create/kpi', (req, res, next)=>{
     var deleteSQL = "DELETE FROM lecture_kpi WHERE lec_idx=?"
     var insertSQL = "INSERT INTO lecture_kpi(cc2_idx, lec_idx) VALUES ?"
 
-    /*
-     * 일단보류 - update시 로직 생각해야함
-    */
-
 
     var tempKpi=[]
     for(var ii in da){
@@ -792,19 +820,25 @@ router.post('/create/kpi', (req, res, next)=>{
 
     pool.getConnection((err, connection)=>{
         connection.query(deleteSQL, lec_idx, (err)=>{
+            if(err){
+                connection.release()
+                console.log(err);
+                res.status(500).send({result:'Error - '})
+                return
+            }// if
             connection.query(insertSQL, [tempKpi], (sqlErr, result)=>{
                 if(sqlErr){
+                    connection.release()
                     console.log(sqlErr);
                     res.status(500).send({result:'Error - '})
+                    return
                 }// if
-                else{
-                    res.status(200).send({result:'success'})
-                }// else
 
-            })
-        })
+                connection.release()
+                res.status(200).send({result:'success'})
 
-        connection.release()
+            })// connection - INSERT
+        })// connection - DELETE
     })// pool
 
 
@@ -847,7 +881,7 @@ router.post('/create/manager', (req, res, next)=>{
 
     var tempManager = new Array()
     var tempStudents = new Array()
-    var tempAttendance=''
+    var tempAttendance=[]
 
 
     // 매니저정보
@@ -862,13 +896,15 @@ router.post('/create/manager', (req, res, next)=>{
 
 
     // 출석카운트 만들기
-    tempAttendance='['
+    // tempAttendance='['
     for(var ii=0;   ii<sessionCount;   ii++){
-        if(ii != 0)
-            tempAttendance+= ','
-        tempAttendance+= '0'
+        tempAttendance.push(0)
+        // if(ii != 0)
+        //     tempAttendance+= ','
+        // tempAttendance+= '0'
     }
-    tempAttendance+=']'
+    // tempAttendance+=']'
+    tempAttendance = JSON.stringify(tempAttendance)
 
 
     // 수강생
@@ -888,12 +924,14 @@ router.post('/create/manager', (req, res, next)=>{
 
     pool.getConnection((er, connection)=>{
         if (er) {
+            connection.release()
             throw er
             return
         }
         // 삭제쿼리
         connection.query(deleteSQL, lec_idx, (deleteErr, deleteResult)=>{
             if ( deleteErr ) {
+                connection.release()
                 console.log(deleteErr);
                 res.status(500).send({msg:'Error - '})
                 return
@@ -902,6 +940,7 @@ router.post('/create/manager', (req, res, next)=>{
             // 삽입쿼리
             connection.query(insertSQL , [tempManager] , (err, result)=>{
                 if ( err ) {
+                    connection.release()
                     console.log(err);
                     res.status(500).send({msg:'Error - '})
                     return
@@ -910,16 +949,25 @@ router.post('/create/manager', (req, res, next)=>{
 
                 //수강생 삭제쿼리
                 connection.query(studentsDeleteSQL, [lec_idx], (stdDeleteErr, stdDeleteResult)=>{
+                    if (stdDeleteErr) {
+                        connection.release()
+                        console.log(stdDeleteErr);
+                        res.status(500).send({msg:'Error - '})
+                        return
+                    }
+
 
                     // 수강생 입력쿼리
                     connection.query(studentsSQL, [tempStudents], (stdErr, studentsResult)=>{
                         if ( stdErr ) {
+                            connection.release()
                             console.log(stdErr);
                             res.status(500).send({msg:'Error - '})
                             return
                         }
 
                         // 응답코드
+                        connection.release()
                         res.status(200).send({
                             msg : 'success',
                             managerIdx : result.insertId,
@@ -982,8 +1030,8 @@ router.post('/create/group', (req, res, next)=>{
         // 수강생 그룹아이디 초기화 쿼리
         connection.query(updateInitSQL, [lec_idx], (updateInitErr)=>{
             if ( updateInitErr ) {
-                console.log(updateInitErr);
                 connection.release()
+                console.log(updateInitErr);
                 res.status(500).send({msg:'Error - updateInitSQL'})
                 return
             }// if
@@ -992,8 +1040,8 @@ router.post('/create/group', (req, res, next)=>{
             // 그룹삭제 쿼리
             connection.query(deleteSQL, [lec_idx], (deleteErr, deleteResult)=>{
                 if ( deleteErr ) {
-                    console.log(deleteErr);
                     connection.release()
+                    console.log(deleteErr);
                     res.status(500).send({msg:'Error - deleteErr'})
                     return
                 }// if
@@ -1010,8 +1058,8 @@ router.post('/create/group', (req, res, next)=>{
                 // INSERT
                 connection.query(insertSQL , [tempGroups] , (err, groupResult)=>{
                     if ( err ) {
-                        console.log(err);
                         connection.release()
+                        console.log(err);
                         res.status(500).send({msg:'Error - '})
                         return
                     }// if
@@ -1036,8 +1084,8 @@ router.post('/create/group', (req, res, next)=>{
                     // 그룹아이디 맵핑 쿼리
                     connection.query(stdUpdate, (stdUpdateErr, stdUpdateResult)=>{
                         if ( stdUpdateErr ) {
-                            console.log(stdUpdateErr);
                             connection.release()
+                            console.log(stdUpdateErr);
                             res.status(500).send({msg:'Error - stdUpdateErr'})
                             return
                         }// if
@@ -1216,7 +1264,7 @@ router.get('/kpi', (req, res, next)=>{
             return
         }
 
-        console.log(result);
+
         // 대분류 카테고리 만들기
         for ( var ii in result ) {
             if(ii>0){

@@ -28,7 +28,7 @@ router.get('/logout', function(req, res, next) {
 // Id Check
 router.get('/confirm/:id', function(req, res, next) {
     var id = req.params.id;
-    console.log("id: ", id);
+    // console.log("id: ", id);
     var sql = "select count(*) as count from tutor where tutor_id=?";
 
     conn.query(sql, id, function(err, row) {

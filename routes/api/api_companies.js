@@ -42,18 +42,21 @@ router.get('/', (req, res, next)=>{
     // apply가 있을경우 로그인 한 강사의 참여이력이 있는 기업만 검색
     // var q   = param == true ?  mysql.format(q1, usr_idx) : q2
     var q   =  param=='all' ? q2 : mysql.format(q1, usr_idx)
-    console.log(q);
-    conn.query(q, [usr_idx, usr_idx], (err, rows)=>{
-        if (err) {
-            res.status(500)
-            return
-        }
-        res.status(200).send({
-            result: "success",
-            status: 200,
-            companies : rows
-        })
-    })
+    pool.getConnection((er, connection)=>{
+        connection.query(q, [usr_idx, usr_idx], (err, rows)=>{
+            connection.release()
+            if (err) {
+                res.status(500)
+                return
+            }
+            res.status(200).send({
+                result: "success",
+                status: 200,
+                companies : rows
+            })
+        }) // connection
+    })// pool
+
 })
 
 
@@ -132,26 +135,26 @@ router.get('/:id', (req,res,next)=>{
         L.tutor_idx=?`
 
 
-    pool.getConnection((er, conn)=>{
+    pool.getConnection((er, connection)=>{
         // 기업정보 쿼리
-        conn.query(companyInfoSQL, [cid], (err, companyResult)=>{
+        connection.query(companyInfoSQL, [cid], (err, companyResult)=>{
             if(err){
-                conn.release()
+                connection.release()
                 console.log(err)
                 res.status(500).send({result: 'sql error'})
                 return
             }
 
             // 관련 수업목록 조회
-            conn.query(relationLecturesSQL, [cid, usr_idx], (relationLecturesErr, relationLecturesResult)=>{
+            connection.query(relationLecturesSQL, [cid, usr_idx], (relationLecturesErr, relationLecturesResult)=>{
                 if(relationLecturesErr){
-                    conn.release()
+                    connection.release()
                     console.log(relationLecturesErr)
                     res.status(500).send({result: 'sql relationLecturesErr'})
                     return
                 }
 
-                conn.release()
+                connection.release()
                 res.status(200).send({
                     result          : 'success',
                     company    : companyResult[0],
@@ -159,7 +162,7 @@ router.get('/:id', (req,res,next)=>{
                 })
 
             })// 관련 수업목록 조회
-        }) // conn
+        }) // connection
     }) // pool
 
 });

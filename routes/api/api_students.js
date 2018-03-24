@@ -78,6 +78,42 @@ router.put('/attendance', (req, res, next)=>{
 
 
 
+// ====== 점수추가 ====== //
+router.put('/score', (req, res, next)=>{
+
+    /*
+    req.body.table이 테이블 명
+    */
+
+    var usr_idx = req.user.user.tutor_idx
+    var table = req.body.table // 테이블
+    var idx = req.body.id // 변경될 값의 아이디
+    var score = Number(req.body.score) // 변경될 값
+
+    var sql =
+    (table=='group') ?
+        "UPDATE `group` SET group_score=group_score+? WHERE group_idx=?" :
+        "UPDATE `registration` SET stu_score=stu_score+? WHERE stu_idx=?" ;
+
+    pool.getConnection((er, connection)=>{
+        connection.query(sql , [score, idx] , (err, result)=>{
+            connection.release()
+            if(err){
+                console.log(err)
+                res.status(500).send({result:"failed"})
+                return
+            }// if
+
+            res.status(200).send({result:"success" , da: result})
+        })// connection
+    })// pool
+
+
+})
+// ====== 점수추가 ====== //
+
+
+
 
 
 

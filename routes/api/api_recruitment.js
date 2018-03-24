@@ -78,10 +78,6 @@ router.get('/tutor/:tid', (req, res, next)=> {
             return;
         }
         console.log(row[0]);
-        // if (row[0]==undefined) {
-        //     res.send(203, { result:'success', data:{} })
-        //     return;
-        // }
         res.send(200, {result:'success', data: row[0]})
     })//conn
 });
@@ -161,9 +157,9 @@ router.get('/check/:id', function(req, res, next) {
     FROM tutor_application
     WHERE rec_idx=? and tutor_idx=?`;
 
-    pool.getConnection((er, conn)=>{
-        conn.query(sql, [rec_idx, tutor_idx], function(e, result) {
-            conn.release()
+    pool.getConnection((er, connection)=>{
+        connection.query(sql, [rec_idx, tutor_idx], function(e, result) {
+            connection.release()
             if (e) {
                 console.log(e);
                 res.send(500,{result:'error'});
@@ -177,7 +173,7 @@ router.get('/check/:id', function(req, res, next) {
                 res.send({reulst: '등록가능', status:200})
                 return
             }// else
-        }) // conn
+        }) // connection
     }) // pool
 });
 
@@ -195,9 +191,9 @@ router.delete('/application/:id', (req, res, next)=>{
 
     var sql = 'DELETE FROM tutor_application WHERE rec_idx=? and tutor_idx=?'
 
-    pool.getConnection((er, conn)=>{
-        conn.query(sql, [rec_idx, tutor_idx], (e, result)=>{
-            conn.release()
+    pool.getConnection((er, connection)=>{
+        connection.query(sql, [rec_idx, tutor_idx], (e, result)=>{
+            connection.release()
             if (e) {
                 console.log(e);
                 res.send(500, {result:e, data:{}});
@@ -205,7 +201,7 @@ router.delete('/application/:id', (req, res, next)=>{
             }
 
             res.send(200, {result:'suucess'})
-        }) // conn
+        }) // connection
     }) // pool
 })
 
@@ -232,8 +228,8 @@ router.get('/records', function(req, res, next) {
             res.send(500, {result:'error'});
             return
         }
-        console.log("rows : ");
-        console.log(rows);
+        // console.log("rows : ");
+        // console.log(rows);
         res.send(200, {
             result : 'success',
             records : rows
@@ -260,8 +256,8 @@ router.get('/records/:id', function(req, res, next) {
             res.send(500, {result:'error'});
             return
         }
-        console.log("rows : ");
-        console.log(rows);
+        // console.log("rows : ");
+        // console.log(rows);
         res.send(200, {
             result : 'success',
             record : rows[0]

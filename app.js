@@ -1,13 +1,14 @@
-var express             = require('express');
-var path                 = require('path');
-var favicon             = require('serve-favicon');
-var logger              = require('morgan');
-var cookieParser    = require('cookie-parser');
-var bodyParser      = require('body-parser');
-var session             = require('express-session');
-var cors             = require('cors');
-var conn                = require('./routes/common/dbconn').connection;
-var fileUpload = require('express-fileupload');
+var express              = require('express');
+var path                   = require('path');
+var favicon               = require('serve-favicon');
+var logger                = require('morgan');
+var cookieParser      = require('cookie-parser');
+var bodyParser         = require('body-parser');
+var session               = require('express-session');
+var cors                     = require('cors');
+var conn                   = require('./routes/common/dbconn').connection;
+var pool                    = require('./routes/common/dbconn').connectionPool; // 풀링방식
+var fileUpload           = require('express-fileupload');
 
 // Passport
 var passport                         = require('passport');
@@ -28,6 +29,7 @@ var FacebookStrategy  = require('passport-facebook').Strategy;
 
 // API Router
 var index          = require('./routes/index');
+var labs            = require('./routes/api/test/testApi'); // 테스트
 
 var api_notices          = require('./routes/api/api_notices');
 var api_recruitment          = require('./routes/api/api_recruitment');
@@ -37,6 +39,7 @@ var api_users                  = require('./routes/api/api_users');
 var api_templates          = require('./routes/api/api_templates');
 var api_students            = require('./routes/api/api_students');
 var api_administrator    = require('./routes/api/api_administrator');
+var api_actionplan    = require('./routes/api/api_actionplan');
 
 
 
@@ -56,7 +59,7 @@ app.use(cors({
     origin:[ // 허용할 도메인
         'http://localhost:8080', 'http://localhost:3333', 'http://www.actiongo.co.kr'
     ],
-    methods:["GET","POST","PUT"], // 허용 메소드
+    methods:["GET","POST","PUT", "DELETE"], // 허용 메소드
     credentials: true // enable set cookie
   }));
 
@@ -133,7 +136,9 @@ app.use('/api/admin',              api_administrator); // 수강생 api
 // app.use('/api/lectures',            isAuth,   api_lectures); //인증
 app.use('/api/lectures',            isAuth, api_lectures); //인증X - 테스트중
 app.use('/api/users',                api_users);
+app.use('/api/plans',                api_actionplan);
 
+app.use('/labs',                    labs);
 app.use('/',                    index);
 
 
@@ -178,15 +183,18 @@ passport.use('adminLogin', new LocalStrategy({ // "login"이라는 LocalStrategy
         // console.log("ID: ", id);
         // console.log("PW: ", password);
         var sql = "select * from admin where admin_id=? and admin_pw=?";
-        conn.query(sql, [id, password], function(err, row) {
-            if (err) {
-                console.log(err);
-                return done(null, false);
-            }
-            // console.log(row[0]);
-            userInfo = row[0];
-            return done(null, userInfo);
-        });
+        pool.getConnection((er, connection)=>{
+            connection.query(sql, [id, password], function(err, row) {
+                connection.release()
+                if (err) {
+                    console.log(err);
+                    return done(null, false);
+                }
+                // console.log(row[0]);
+                userInfo = row[0];
+                return done(null, userInfo);
+            }) // connection
+        })// pool
     }
 ));
 
@@ -204,15 +212,19 @@ passport.use('login', new LocalStrategy({ // "login"이라는 LocalStrategy를 �
         // console.log("ID: ", id);
         // console.log("PW: ", password);
         var sql = "select * from tutor where tutor_id=? and tutor_pw=?";
-        conn.query(sql, [id, password], function(err, row) {
-            if (err) {
-                console.log(err);
-                return done(null, false);
-            }
-            console.log(row[0]);
-            userInfo = row[0];
-            return done(null, userInfo);
-        });
+
+        pool.getConnection((er, connection)=>{
+            connection.query(sql, [id, password], function(err, row) {
+                connection.release()
+                if (err) {
+                    console.log(err);
+                    return done(null, false);
+                }
+                // console.log(row[0]);
+                userInfo = row[0];
+                return done(null, userInfo);
+            }) // connection
+        })// pool
     }
 ));
 
@@ -237,32 +249,36 @@ passport.use('kakao', new KakaoStrategy({
         ];
 
         //기존 유저 확인
-        conn.query(sql, usr[0], function(err, row) {
-            if (err) {
-                return err;
-            }
+        pool.getConnection((er, connection)=>{
+            connection.query(sql, usr[0], function(err, row) {
+                if (err) {
+                    connection.release()
+                    return err;
+                }
 
-            // 신규유저
-            if (row[0]===undefined) {
-                console.log("신규!");
-                console.log(usr);
-                sql = "insert into tutor set tutor_id=?, tutor_pw='', tutor_name=?, tutor_email=?, tutor_type=?";
-                conn.query(sql, usr, function(err2) {
-                    if (err2) {
-                        console.log(err2);
-                        return err2;
-                    }
-                });//conn
-                return done(null, {
-                    tutor_id: usr[0],
-                    tutor_name: usr[1],
-                    tutor_type: usr[3]
-                });
-            }//if
+                // 신규유저
+                if (row[0]===undefined) {
+                    // console.log("신규!");
+                    // console.log(usr);
+                    sql = "insert into tutor set tutor_id=?, tutor_pw='', tutor_name=?, tutor_email=?, tutor_type=?";
+                    connection.query(sql, usr, function(err2) {
+                        connection.release()
+                        if (err2) {
+                            console.log(err2);
+                            return err2;
+                        }
+                    });//conn
 
-            return done(null, row[0]);
-        });//conn
+                    return done(null, {
+                        tutor_id: usr[0],
+                        tutor_name: usr[1],
+                        tutor_type: usr[3]
+                    });
+                }//if
 
+                return done(null, row[0]);
+            });//conn
+        })// pool
 
 
     }
@@ -285,30 +301,34 @@ passport.use('naver', new NaverStrategy({
         ];
 
         //기존 유저 확인
-        conn.query(sql, usr[0], function(err, row) {
-            if (err) {
-                return err;
-            }
-            // 신규유저
-            if (row[0]===undefined) {
-                console.log("신규!");
-                sql = "insert into tutor set tutor_id=?, tutor_pw='', tutor_name=?, tutor_email=?, tutor_img=?, tutor_type=?";
-                conn.query(sql, usr, function(err2) {
-                    if (err2) {
-                        console.log(err2);
-                        return err2;
-                    }
+        pool.getConnection((er, connection)=>{
+            connection.query(sql, usr[0], function(err, row) {
+                if (err) {
+                    connection.release()
+                    return err;
+                }
+                // 신규유저
+                if (row[0]===undefined) {
+                    // console.log("신규!");
+                    sql = "insert into tutor set tutor_id=?, tutor_pw='', tutor_name=?, tutor_email=?, tutor_img=?, tutor_type=?";
+                    connection.query(sql, usr, function(err2) {
+                        connection.release()
+                        if (err2) {
+                            console.log(err2);
+                            return err2;
+                        }
 
-                });//conn
-                return done(null, {
-                    tutor_id: usr[0],
-                    tutor_name: usr[1],
-                    tutor_img: usr[3],
-                    tutor_type: usr[4]
-                });
-            }//if
-            return done(null, row[0]);
-        });//conn
+                    });//connection
+                    return done(null, {
+                        tutor_id: usr[0],
+                        tutor_name: usr[1],
+                        tutor_img: usr[3],
+                        tutor_type: usr[4]
+                    });
+                }//if
+                return done(null, row[0]);
+            });//connection
+        })// pool
 
     }
 ));
@@ -327,29 +347,33 @@ passport.use('facebook', new FacebookStrategy({
         ];
 
         //기존 유저 확인
-        conn.query(sql, usr[0], function(err, row) {
-            if (err) {
-                return err;
-            }
-            // 신규유저
-            if (row[0]===undefined) {
-                // console.log("신규!");
-                sql = "insert into tutor set tutor_id=?, tutor_pw='', tutor_name=?,  tutor_type=?";
-                conn.query(sql, usr, function(err2) {
-                    if (err2) {
-                        console.log(err2);
-                        return err2;
-                    }
+        pool.getConnection((er, connection)=>{
+            connection.query(sql, usr[0], function(err, row) {
+                if (err) {
+                    connection.release()
+                    return err;
+                }
+                // 신규유저
+                if (row[0]===undefined) {
+                    // console.log("신규!");
+                    sql = "insert into tutor set tutor_id=?, tutor_pw='', tutor_name=?,  tutor_type=?";
+                    connection.query(sql, usr, function(err2) {
+                        connection.release()
+                        if (err2) {
+                            console.log(err2);
+                            return err2;
+                        }
 
-                });//conn
-                return cb(null, {
-                    tutor_id: usr[0],
-                    tutor_name: usr[1],
-                    tutor_type: usr[2]
-                });
-            }//if
-            return cb(null, row[0]);
-        });//conn
+                    });//connection
+                    return cb(null, {
+                        tutor_id: usr[0],
+                        tutor_name: usr[1],
+                        tutor_type: usr[2]
+                    });
+                }//if
+                return cb(null, row[0]);
+            });//connection
+        })// pool
     }
 ));
 
