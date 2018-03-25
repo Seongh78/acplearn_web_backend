@@ -58,7 +58,10 @@ app.set('view engine', 'ejs');
 // 크로스도메인 처리
 app.use(cors({
     origin:[ // 허용할 도메인
-        'http://localhost:8080', 'http://localhost:3333', 'http://www.actiongo.co.kr'
+        'http://localhost:8080',
+        'http://localhost:8081', 
+        'http://localhost:3333',
+        'http://www.actiongo.co.kr'
     ],
     methods:["GET","POST","PUT", "DELETE"], // 허용 메소드
     credentials: true // enable set cookie
