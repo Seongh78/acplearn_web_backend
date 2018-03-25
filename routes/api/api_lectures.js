@@ -507,7 +507,7 @@ router.post('/create/aplterm', (req, res, next)=>{
         ls_startDate,
         ls_endDate,
         ls_location,
-        lec_seq
+        ls_seq
     )
     VALUES ?`
 
@@ -546,7 +546,7 @@ router.post('/create/aplterm', (req, res, next)=>{
                     da.sessionDetail[ii].ls_startDate,
                     da.sessionDetail[ii].ls_endDate,
                     da.sessionDetail[ii].ls_location,
-                    da.sessionDetail[ii].lec_seq,
+                    da.sessionDetail[ii].ls_seq,
                 ])
             }//for
 
@@ -579,12 +579,19 @@ router.post('/create/aplterm', (req, res, next)=>{
                 da.sessionDetail[ii].ls_startDate,
                 da.sessionDetail[ii].ls_endDate,
                 da.sessionDetail[ii].ls_location,
-                da.sessionDetail[ii].lec_seq,
+                da.sessionDetail[ii].ls_seq,
             ])
         }//for
 
 
         connection.query(deleteSQL, lec_idx, (deleteErr , deleteResult)=>{
+            if ( deleteErr ) {
+                connection.release()
+                console.log(deleteErr);
+                res.status(500).send({msg:'Error - '})
+                return
+            }// if
+
             connection.query(lectureSessionSQL , [tempSessions] , (err, result)=>{
                 if ( err ) {
                     connection.release()
@@ -959,15 +966,14 @@ router.post('/create/manager', (req, res, next)=>{
 
                     // 수강생 입력쿼리
                     connection.query(studentsSQL, [tempStudents], (stdErr, studentsResult)=>{
+                        // connection.release()
                         if ( stdErr ) {
-                            connection.release()
                             console.log(stdErr);
                             res.status(500).send({msg:'Error - '})
                             return
                         }
 
                         // 응답코드
-                        connection.release()
                         res.status(200).send({
                             msg : 'success',
                             managerIdx : result.insertId,
@@ -1011,11 +1017,11 @@ router.post('/create/group', (req, res, next)=>{
 
 
 
-    var tempGroups = [] //강의 내 팀
+    var tempGroups = [] //강의내 팀
     for( var ii in da.teams ) {
         tempGroups.push([
-            da.teams[ii].name,
-            da.teams[ii].description,
+            da.teams[ii].group_name,
+            da.teams[ii].group_text,
             lec_idx
         ])
     }// for
@@ -1080,6 +1086,7 @@ router.post('/create/group', (req, res, next)=>{
                     }// for
 
 
+                    console.log(stdUpdate);
 
                     // 그룹아이디 맵핑 쿼리
                     connection.query(stdUpdate, (stdUpdateErr, stdUpdateResult)=>{

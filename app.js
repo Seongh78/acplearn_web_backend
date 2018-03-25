@@ -40,6 +40,7 @@ var api_templates          = require('./routes/api/api_templates');
 var api_students            = require('./routes/api/api_students');
 var api_administrator    = require('./routes/api/api_administrator');
 var api_actionplan    = require('./routes/api/api_actionplan');
+var api_comments    = require('./routes/api/api_comments');
 
 
 
@@ -125,21 +126,21 @@ app.use(function(req, res, next) {
 
 
 // API
-app.use('/api/notices',           api_notices); //
+app.use('/api/notices',                  api_notices) //
 
-app.use('/api/recruitment',       api_recruitment); //
-app.use('/api/companies',        isAuth,   api_companies); // 기업 api
-app.use('/api/templates',        isAuth,   api_templates); // 템플릿 api
-app.use('/api/students',        isAuth,   api_students); // 수강생 api
-app.use('/api/admin',              api_administrator); // 수강생 api
+app.use('/api/recruitment',          api_recruitment) //
+app.use('/api/companies',           isAuth,   api_companies) // 기업 api
+app.use('/api/templates',             isAuth,   api_templates) // 템플릿 api
+app.use('/api/students',               isAuth,   api_students) // 수강생 api
+app.use('/api/admin',                   api_administrator) // 수강생 api
 
-// app.use('/api/lectures',            isAuth,   api_lectures); //인증
-app.use('/api/lectures',            isAuth, api_lectures); //인증X - 테스트중
-app.use('/api/users',                api_users);
-app.use('/api/plans',                api_actionplan);
+app.use('/api/lectures',                isAuth, api_lectures)
+app.use('/api/users',                    api_users)
+app.use('/api/plans',                    api_actionplan)
+app.use('/api/comments',           api_comments) // 피드백/코멘트 관리
 
-app.use('/labs',                    labs);
-app.use('/',                    index);
+app.use('/labs',                    labs)
+app.use('/',                    index)
 
 
 
