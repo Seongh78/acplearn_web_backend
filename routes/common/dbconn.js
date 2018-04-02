@@ -21,6 +21,7 @@ function hostinfo() {
           password: "1234",
           database: "acplearn_base",
           port: "3306",
+          // connectionLimit :20,
           multipleStatements: true
     }
 

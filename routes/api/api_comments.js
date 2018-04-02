@@ -28,6 +28,10 @@ API 목록
 /detail/:lap_idx
 
 
+02. 모듈별 강의피드 목록조회
+/modules/:lm_idx
+
+
 */
 
 
@@ -73,6 +77,48 @@ router.get('/feedback/:lec_idx', isAuth, (req,res,next)=>{
     }) // pool
 })
 // ====== 01. 강의활동 목록조회 ====== //
+
+
+
+
+
+
+
+
+
+
+// ====== 02. 모듈별 강의피드 목록조회 ====== //
+router.get('/modules/:lm_idx', isAuth, (req,res,next)=>{
+    var lm_idx = req.params.lm_idx // 기준 id (부모아이디)
+    var commentSQL = `
+    SELECT *
+    FROM
+    	lecture_comment LC,
+        registration R
+    WHERE
+    	LC.lm_idx=? and R.stu_idx=LC.stu_idx
+    `
+
+
+    pool.getConnection((er, connection)=>{
+        connection.query( commentSQL , [ lm_idx ] , (commentErr, commentResult)=>{
+            connection.release()
+            if ( commentErr ) {
+                console.log(commentErr);
+                res.send(500, {result:'error'})
+                return
+            }
+
+            console.log(commentResult)
+            res.send(200, {
+                result: 'success',
+                comments : commentResult
+            }) // res
+
+        })// commentSQL - conn
+    }) // pool
+})
+// ====== 02. 모듈별 강의피드 목록조회 ====== //
 
 
 

@@ -13,6 +13,12 @@ var xlsx = require('node-xlsx');
 var fileUpload = require('express-fileupload');
 
 
+
+conn.connect()
+
+
+
+
 /*
 
 (O) : 완료
@@ -27,28 +33,37 @@ var fileUpload = require('express-fileupload');
 // ====== (O) APL강의 목록 ====== //
 router.get('/', (req, res, next)=>{
     let usr_idx = req.user.user.tutor_idx; // 유저아이디
-    let q =
-    `SELECT
+    let q =`
+    SELECT
         L.lec_idx,
         L.lec_title,
         L.lec_flag,
         date_format(L.lec_startDate, '%Y년 %c월 %d일') as lec_startDate,
         date_format(L.lec_endDate, '%Y년 %c월 %d일') as lec_endDate,
-        L.lec_sessionCount, L.lec_personnel
+        (select count(*) from lecture_session LS where LS.lec_idx=L.lec_idx) as lec_sessionCount,
+		(select count(*) from registration R where R.lec_idx=L.lec_idx) as lec_personnel
     FROM
         lecture L,
         tutor T
     WHERE
-        T.tutor_idx = L.tutor_idx and T.tutor_idx=? `
+        T.tutor_idx = L.tutor_idx and T.tutor_idx=?
+    `
 
     var lecParameter = [usr_idx]
-
+    console.log('req.query.lecType : ',req.query.lecType);
     // 쿼리스트링여부 - 강의타입 필터링
     if(req.query.lecType){
-        q += " and L.lec_flag=? "
+        // 강의전 , 진행중은 하나로 표기
+        if (req.query.lecType==='진행중' || req.query.lecType==='진행중') {
+            console.log('111111111');
+            q += " and L.lec_flag='강의전' or L.lec_flag=?"
+        }else{
+            q += " and L.lec_flag=? "
+        }
         lecParameter.push(req.query.lecType)
     }
 
+    // console.log();
 
     pool.getConnection((er, connection)=>{
         connection.query(q, lecParameter,(e, rows)=>{
@@ -57,6 +72,7 @@ router.get('/', (req, res, next)=>{
                 console.log(e);
                 return res.send(500, {result:e, data:{}});
             }
+            // console.log(rows);
             res.send(200, {result:'success', data:rows});
         })// conn
     }) // pool
@@ -1350,6 +1366,28 @@ router.post('/xlsToJson/:sheetNumber', (req,res,next)=>{
 
 
 
+// ====== 관리자 - 강의개설 승인 ====== //
+router.put('/confirm/:id', (req,res,next)=>{
+    var lec_idx = req.params.id // 강의아이디
+    var confirmSQL = ` UPDATE lecture SET lec_flag = '강의전' WHERE lec_idx=? `
+
+    pool.getConnection((er, connection)=>{
+        connection.query(confirmSQL, [lec_idx], (confirmErr, confirmResult)=>{
+            connection.release()
+            if (confirmErr) {
+                console.log(confirmErr)
+                res.send(500, {result:'error - confirm'})
+                return
+            }
+
+            res.send(200, {result:'success'})
+        }) // connection
+    })// pool
+})
+// ====== 관리자 - 강의개설 승인 ====== //
+
+
+
 
 
 
@@ -1359,16 +1397,50 @@ router.post('/xlsToJson/:sheetNumber', (req,res,next)=>{
 
 
 // TEST
-router.get('/call/test', (req,res,next)=>{
+router.get('/call/test',  (req,res,next)=>{
 
-    res.status(200).send({
-        result:200,
-        message: "success"
-    });
+    var sql = "select * from tutor order by tutor_idx desc"
+
+    conn.query(sql, (err, rows)=>{
+        if (err) {
+            res.send(500, {result: 'Error'})
+            return
+        }
+
+        res.status(200).send({
+            result:200,
+            message: "success"
+        });
+        // conn.destroy()
+    })
+    conn.end()
+
+
 });
 
+// TEST2
+router.get('/call/test2',  (req,res,next)=>{
+
+    var sql = "select * from tutor order by tutor_idx desc"
 
 
+    pool.getConnection((er, connection)=>{
+        connection.query(sql, (err, rows)=>{
+            connection.release()
+            if (err) {
+                res.send(500, {result: 'Error'})
+                return
+            }
+
+            res.status(200).send({
+                result:200,
+                message: "success"
+            });
+        })
+    })
+
+
+});
 
 
 

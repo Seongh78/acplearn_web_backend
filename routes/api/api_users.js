@@ -47,6 +47,7 @@ router.get('/confirm/:id', function(req, res, next) {
         }
 
     });
+    
 });
 
 // New tutor

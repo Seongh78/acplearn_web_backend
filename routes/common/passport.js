@@ -32,10 +32,12 @@ module.exports = {
             }
             res.redirect('/');
         },
+
+        // 관리자 권한검사
         isAuthenticatedAdmin: function(req, res, next) {
             var u = req.session.passport;
             // console.log("U: ",req.session.passport);
-            if (u!==undefined && u.user.tutor_type==='admin') {
+            if (u!==undefined && u.user.tutor_id==='admin') {
                 console.log('admin');
                 return next();
             }
