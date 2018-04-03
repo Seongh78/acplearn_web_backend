@@ -59,7 +59,7 @@ app.set('view engine', 'ejs');
 app.use(cors({
     origin:[ // 허용할 도메인
         'http://localhost:8080',
-        'http://localhost:8081', 
+        'http://localhost:8081',
         'http://localhost:3333',
         'http://www.actiongo.co.kr'
     ],
@@ -215,7 +215,7 @@ passport.use('login', new LocalStrategy({ // "login"이라는 LocalStrategy를 �
     function(req, id, password, done) {
         // console.log("ID: ", id);
         // console.log("PW: ", password);
-        var sql = "select * from tutor where tutor_id=? and tutor_pw=?";
+        var sql = "select * from tutor where tutor_id=? and tutor_pw=PASSWORD(?)";
 
         pool.getConnection((er, connection)=>{
             connection.query(sql, [id, password], function(err, row) {
