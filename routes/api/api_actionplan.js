@@ -56,7 +56,7 @@ router.get('/detail/:lap_idx', isAuth, (req,res,next)=>{
 	LEFT JOIN capability_category2 CC2
 	ON LK.cc2_idx=CC2.cc2_idx
 
-	WHERE LAP.lap_idx=1
+	WHERE LAP.lap_idx=?
     `
     var lacSQL = `
     SELECT

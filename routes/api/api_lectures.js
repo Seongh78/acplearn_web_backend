@@ -137,27 +137,28 @@ router.get('/dt/:id', (req, res, next)=>{
                                 WHERE      LK.lec_idx=? and CC2.cc2_idx=LK.cc2_idx`,
         lecture      : `
         SELECT
-        	L.lec_idx 			as 	lec_idx,
-        	L.lec_startDate 	as 	lec_startDate,
-        	L.lec_endDate		as 	lec_endDate,
-        	L.lec_title 		as 	lec_title,
-        	L.lec_personnel 	as 	lec_personnel,
-        	L.lec_target		as 	lec_target,
-        	L.lec_time		    as 	lec_time,
-        	L.lec_content		as 	lec_content,
-        	L.lec_goal			as 	lec_goal,
-        	L.lec_effect		as 	lec_effect,
-        	L.lec_file			as 	lec_file,
-        	L.lec_flag			as 	lec_flag,
-        	L.lec_sessionCount	as	lec_sessionCount,
+        	L.lec_idx 			          as 	 lec_idx,
+        	L.lec_startDate 	      as 	 lec_startDate,
+        	L.lec_endDate		     as 	lec_endDate,
+        	L.lec_title 		           as 	  lec_title,
+        	L.lec_personnel 	     as 	lec_personnel,
+        	L.lec_target		        as 	   lec_target,
+        	L.lec_time		             as 	lec_time,
+        	L.lec_content		      as 	 lec_content,
+        	L.lec_goal			         as 	lec_goal,
+        	L.lec_effect		         as 	lec_effect,
+        	L.lec_file			            as 	   lec_file,
+        	L.lec_flag			          as 	  lec_flag,
+        	L.lec_sessionCount	  as	  lec_sessionCount,
 
-        	LS.ls_idx			as	ls_idx,
-        	LS.ls_title			as 	ls_title,
-        	LS.ls_location		as	ls_location,
-            date_format(LS.ls_startDate, '%Y-%m-%d')   	as  ls_startDate,
+        	LS.ls_idx			           as	ls_idx,
+        	LS.ls_title			            as 	ls_title,
+        	LS.ls_aplDate			   as 	ls_aplDate,
+        	LS.ls_location		        as	ls_location,
+            date_format(LS.ls_startDate, '%Y-%m-%d')   	 as  ls_startDate,
             date_format(LS.ls_endDate,   '%Y-%m-%d')    as  ls_endDate,
-        	date_format(LS.ls_startTime, '%H:%i')		as	ls_startTime,
-        	date_format(LS.ls_endTime, 	 '%H:%i')	   	as	ls_endTime,
+        	date_format(LS.ls_startTime, '%H:%i')		        as	ls_startTime,
+        	date_format(LS.ls_endTime, 	 '%H:%i')	   	       as  ls_endTime,
 
         	LSC.lsc_idx 		as 	lsc_idx,
         	LSC.lsc_title		as	lsc_title,
@@ -824,6 +825,7 @@ router.post('/create/sessions', (req, res, next)=>{
         ls_location,
         ls_startDate,
         ls_endDate,
+        ls_aplDate,
         ls_seq,
         lec_idx
     ) VALUES ?`
@@ -931,6 +933,7 @@ router.post('/create/sessions', (req, res, next)=>{
                         sessions[ii].ls_location,
                         sessions[ii].ls_startDate,
                         sessions[ii].ls_endDate,
+                        sessions[ii].ls_aplDate,
                         (ii+1), // 순서
                         lec_idx
                     ])
