@@ -29,7 +29,7 @@ function hostinfo() {
     //     host: "127.0.0.1",
     //     user: "root",
     //     password: "",
-    //     database: "acplearn_base",
+    //     database: "acplearn",
     //     port: "3307",
     //     multipleStatements: true
     // }
