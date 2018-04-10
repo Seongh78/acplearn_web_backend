@@ -50,7 +50,8 @@ router.get('/', (req, res, next)=>{
     `
 
     var lecParameter = [usr_idx]
-    console.log('req.query.lecType : ',req.query.lecType);
+    // console.log('req.query.lecType : ',req.query.lecType);
+
     // 쿼리스트링여부 - 강의타입 필터링
     if(req.query.lecType){
         // 강의전 , 진행중은 하나로 표기
@@ -95,7 +96,7 @@ router.delete('/:id', (req, res, next)=>{
     var usr_idx = req.user.user.tutor_idx; // 유저아이디
     var lec_idx = req.params.id
     var sql = 'DELETE FROM lecture WHERE lec_idx=? and  tutor_idx=?'
-    console.log('lec_idx: ', lec_idx);
+
     pool.getConnection((er, connection)=>{
         connection.query(sql, [lec_idx, usr_idx], (err, result)=>{
             connection.release()
@@ -250,6 +251,7 @@ router.get('/dt/:id', (req, res, next)=>{
                     lec_idx                : lectureResult[ii].lec_idx,
                     ls_startDate        : lectureResult[ii].ls_startDate,
                     ls_endDate         : lectureResult[ii].ls_endDate,
+                    ls_aplDate          : lectureResult[ii].ls_aplDate,
                     ls_title                 : lectureResult[ii].ls_title,
                     ls_location          : lectureResult[ii].ls_location,
                     ls_startTime        : lectureResult[ii].ls_startTime,
@@ -329,7 +331,7 @@ router.get('/dt/:id', (req, res, next)=>{
                             if( lectureResult[ii].lt_idx != null ){ // Null이 아닌경우
                                 //전 아이디와 다를경우 푸시
                                 if( lectureResult[ii].lt_idx != lectureResult[ii-1].lt_idx ){
-                                    console.log("sessions[sessionCount].sessionClass : ", sessionClassCount);
+                                    // console.log("sessions[sessionCount].sessionClass : ", sessionClassCount);
                                     sessions[sessionCount].sessionClass[sessionClassCount].timetables.push(tempTimetables)
                                     timetableCount=timetableCount<0? 0 : timetableCount+1
                                 }
@@ -362,7 +364,7 @@ router.get('/dt/:id', (req, res, next)=>{
                     return res.status(500).send({result : 'kpiErr'})
                 }
 
-                console.log(kpiResult);
+                // console.log(kpiResult);
 
                 // 참여기업
                 connection.query(q.companies, [lec_idx], (companiesErr, companiesResult)=>{
@@ -677,15 +679,51 @@ router.get('/dt2/:id', (req, res, next)=>{
 
 // ====== (Dev) 강의등록 확인 - complete ====== //
 router.post('/complete',  (req, res, next)=>{
-    // var studentsCount = req.body.completeData.count //학생수
-    // var sessionCount = req.body.completeData.sessionCount // 세션수
-    var usr_idx = req.user.user.tutor_idx // 강사 아이디
-    var lec_idx = req.body.lec_idx // 강의 아이디
 
+    var tutor_idx = req.user.user.tutor_idx // 강사 아이디
+    var lec_idx = req.body.lec_idx // 강의 아이디
+    var sessions = req.body.sessions // 회차정보
+
+    var student_count = req.body.student_count //학생수
+    var session_count = req.body.session_count // 세션수
+
+    // 플래그변경
     var completeSQL = `UPDATE lecture SET lec_flag='승인대기' WHERE lec_idx=? and tutor_idx=?`
+    var acplearnDaySQL = ` INSERT INTO lecture_acplearn_day(lad_date, ls_idx) VALUES ? ;`
+
+    // 액플런데이 변수
+    var sdt , edt , dateDiff;
+    var tempLAD = [] // 데이터모델
+    var tempDate; // 임시저장 날짜
+    var tempString=''
+
+    // 액플런데이 일수 구하기
+    var keys = Object.keys(sessions)
+    for(var ii  in  keys){
+        console.log(sessions[ii].ls_aplDate);
+        sdt = new Date(sessions[ii].ls_aplDate);
+        edt = new Date(sessions[ii].ls_endDate);
+        dateDiff = Math.ceil((edt.getTime()-sdt.getTime())/(1000*3600*24));
+
+        for(var jj=0;  jj <= dateDiff;  jj++){
+            console.log("1111111111");
+            tempDate = new Date(sdt)
+            tempDate.setDate(sdt.getDate()+ii)
+            // 날짜포맷
+            tempString     = tempDate.getFullYear()+"-"
+            tempString   += (tempDate.getMonth()+1) < 10 ? '0' : '' + (tempDate.getMonth()+1)+"-"
+            tempString   += (tempDate.getDate()+1)     < 10 ? '0' : '' + (tempDate.getDate()+1)
+            tempLad.push([tempString, sessions[ii].ls_idx, ])
+            console.log("22222222222");
+        }//
+    }//
+
+    console.log("tempLad >");
+    console.log(tempLad);
+
 
     pool.getConnection((er,connection)=>{
-        connection.query(completeSQL, [lec_idx, usr_idx], (completeErr, completeResult)=>{
+        connection.query(completeSQL, [lec_idx, tutor_idx], (completeErr, completeResult)=>{
             connection.release()
             if( completeErr ){
                 console.log(completeErr);
@@ -803,8 +841,9 @@ router.post('/create/sessions', (req, res, next)=>{
     var tutor_idx           = req.user.user.tutor_idx  //  튜터아이디
     var lec_idx              = req.body.lec_idx // 강의아이디
     var sessions            = req.body.sessions  // 일정데이터
-    var lec_startDate    = req.body.lec_startDate  // 강의기간 - 시작
-    var lec_endDate     = req.body.lec_endDate   // 강의기간 - 종료
+    var lec_startDate    = new Date(req.body.lec_startDate)  // 강의기간 - 시작
+    var lec_endDate     = new Date(req.body.lec_endDate)   // 강의기간 - 종료
+
 
 
     // 강의등록
@@ -835,6 +874,7 @@ router.post('/create/sessions', (req, res, next)=>{
     INSERT INTO lecture_session_class(
         lsc_title,
         lsc_date,
+        lsc_seq,
         ls_idx
     ) VALUES ?`
 
@@ -887,16 +927,28 @@ router.post('/create/sessions', (req, res, next)=>{
             return
         }
 
+        // 날짜포맷 - 시작일
+        var tempDateStart = String(lec_startDate.getFullYear())+'-'
+                tempDateStart    += ((lec_startDate.getMonth() + 1) < 10 ? '0' : '') + String(lec_startDate.getMonth()+1)
+                tempDateStart    += '-'
+                tempDateStart    += (lec_startDate.getDate() < 10 ? '0' : '') + String(lec_startDate.getDate())
+
+        // 날짜포맷 - 종료일
+        var tempDateEnd = String(lec_endDate.getFullYear())+'-'
+                tempDateEnd    += ((lec_endDate.getMonth() + 1 < 10) ? '0' : '') + String(lec_endDate.getMonth()+1)
+                tempDateEnd    += '-'
+                tempDateEnd    += (lec_endDate.getDate() < 10 ? '0' : '') + String(lec_endDate.getDate())
+
 
         // 강의 등록 or 업뎃
         connection.query(SQLlectureInsert, [
             lec_idx, tempTitle,
-            lec_startDate,
-            lec_endDate,
+            tempDateStart,
+            tempDateEnd,
             tutor_idx,
             lec_idx,
-            lec_startDate,
-            lec_endDate
+            tempDateStart,
+            tempDateEnd,
         ], (ERRlectureInsert, RSlectureInsert)=>{
             if (ERRlectureInsert) {
                 connection.release()
@@ -927,13 +979,35 @@ router.post('/create/sessions', (req, res, next)=>{
 
                 // 세션모델
                 var sessionsKeys = Object.keys(sessions)
+                var tempAplDate;
                 for(var ii=0;  ii<sessionsKeys.length;  ii++){
+                    // 날짜포맷 - 시작일
+                    tempDateStart = new Date(sessions[ii].ls_startDate)
+                    tempDateStart = String(lec_startDate.getFullYear())+'-'
+                    tempDateStart    += ((lec_startDate.getMonth() + 1) < 10 ? '0' : '') + String(lec_startDate.getMonth()+1)
+                    tempDateStart    += '-'
+                    tempDateStart    += (lec_startDate.getDate() < 10 ? '0' : '') + String(lec_startDate.getDate())
+
+                    // 날짜포맷 - 종료일
+                    tempDateEnd = new Date(sessions[ii].ls_endDate)
+                    tempDateEnd = String(lec_endDate.getFullYear())+'-'
+                    tempDateEnd    += ((lec_endDate.getMonth() + 1 < 10) ? '0' : '') + String(lec_endDate.getMonth()+1)
+                    tempDateEnd    += '-'
+                    tempDateEnd    += (lec_endDate.getDate() < 10 ? '0' : '') + String(lec_endDate.getDate())
+
+                    // 날짜포맷 - 액플런 시작일
+                    tempAplDate = new Date(sessions[ii].ls_endDate)
+                    tempAplDate = String(lec_endDate.getFullYear())+'-'
+                    tempAplDate    += ((lec_endDate.getMonth() + 1 < 10) ? '0' : '') + String(lec_endDate.getMonth()+1)
+                    tempAplDate    += '-'
+                    tempAplDate    += (lec_endDate.getDate() < 10 ? '0' : '') + String(lec_endDate.getDate())
+
                     tempSessions.push([
                         sessions[ii].ls_title,
                         sessions[ii].ls_location,
-                        sessions[ii].ls_startDate,
-                        sessions[ii].ls_endDate,
-                        sessions[ii].ls_aplDate,
+                        tempDateStart,
+                        tempDateEnd,
+                        tempAplDate,
                         (ii+1), // 순서
                         lec_idx
                     ])
@@ -952,9 +1026,17 @@ router.post('/create/sessions', (req, res, next)=>{
                     // 교육모델
                     for(var ii=0;  ii<sessionsKeys.length;  ii++){
                         for(var jj  in  sessions[ii].sessionClass){
+                            // 날짜포맷 - 시작일
+                            tempDateStart = new Date(sessions[ii].sessionClass[jj].lsc_date)
+                            tempDateStart = String(lec_startDate.getFullYear())+'-'
+                            tempDateStart    += ((lec_startDate.getMonth() + 1) < 10 ? '0' : '') + String(lec_startDate.getMonth()+1)
+                            tempDateStart    += '-'
+                            tempDateStart    += (lec_startDate.getDate() < 10 ? '0' : '') + String(lec_startDate.getDate())
+
                             tempClass.push([
                                 sessions[ii].sessionClass[jj].lsc_title,
-                                sessions[ii].sessionClass[jj].lsc_date,
+                                tempDateStart,
+                                (ii+1),
                                 RSsessionInsert.insertId
                             ])
                         } // #2
@@ -964,7 +1046,11 @@ router.post('/create/sessions', (req, res, next)=>{
                     // 교육이 없는경우
                     if (tempClass.length < 1  ||  tempClass.length == undefined) {
                         connection.release()
-                        res.send(200, {result: 'success', lec_idx})
+                        res.send(200, {
+                            result : 'success',
+                            lec_idx : lec_idx, // 강의아이디
+                            ls_idx : RSsessionInsert.insertId // 세션아이디
+                         })
                         return
                     }
 
@@ -995,7 +1081,11 @@ router.post('/create/sessions', (req, res, next)=>{
                         // 시간표가 없는경우
                         if (tempTimetables.length < 1  ||  tempTimetables.length == undefined) {
                             connection.release()
-                            res.send(200, {result: 'success', lec_idx})
+                            res.send(200, {
+                                result : 'success',
+                                lec_idx : lec_idx, // 강의아이디
+                                ls_idx : RSsessionInsert.insertId // 세션아이디
+                             })
                             return
                         }
 
@@ -1028,10 +1118,14 @@ router.post('/create/sessions', (req, res, next)=>{
                                 } // #2
                             } // #1
 
-                            // 시간표가 없는경우
+                            // 모듈 없는경우
                             if (tempModules.length < 1  ||  tempModules.length == undefined) {
                                 connection.release()
-                                res.send(200, {result: 'success', lec_idx})
+                                res.send(200, {
+                                    result : 'success',
+                                    lec_idx : lec_idx, // 강의아이디
+                                    ls_idx : RSsessionInsert.insertId // 세션아이디
+                                 })
                                 return
                             }
 
@@ -1045,7 +1139,8 @@ router.post('/create/sessions', (req, res, next)=>{
                                 connection.release()
                                 res.send(200, {
                                     result : 'success',
-                                    lec_idx: lec_idx
+                                    lec_idx : lec_idx, // 강의아이디
+                                    ls_idx : RSsessionInsert.insertId // 세션아이디
                                  })
                             })// 모듈쿼리
 

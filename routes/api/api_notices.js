@@ -20,19 +20,28 @@ router.get('/', function(req, res, next) {
     var limitStart = req.query.start   == undefined ? 0 : Number(req.query.start)
     var limitEnd = req.query.end     == undefined ? 10 : Number(req.query.end)
 
-    console.log("limitStart : ", limitStart);
+    // console.log("limitStart : ", limitStart);
 
-    conn.query(sql, [ limitStart, limitEnd ], function(err, rows) {
-        if (err) {
-            console.log(err);
-            res.json(500, {"result":500});
-            return;
+    pool.getConnection((er, connection)=>{
+        if (er) {
+            connection.release()
+            throw er
+            return
         }
-        console.log(rows);
-        res.send(200, {
-              notices: rows
-        });
-    })//conn
+
+        connection.query(sql, [ limitStart, limitEnd ], function(err, rows) {
+            connection.release()
+            if (err) {
+                console.log(err);
+                res.json(500, {"result":500});
+                return;
+            }
+
+            res.send(200, {
+                  notices: rows
+            });
+        })//connection
+    })
 
 });
 
@@ -56,15 +65,23 @@ router.post('/new', function(req, res, next) {
         admin_idx : 1
     };
     var sql = "insert into notice set ?";
-    conn.query(sql, da, function(err, rs) {
-        if (err) {
-            console.log(err);
-            res.json(500, {"result":500});
-            return;
+    pool.getConnection((er, connection)=>{
+        if (er) {
+            connection.release()
+            throw er
+            return
         }
 
-        res.json(200, {"result":200});
-    });
+        connection.query(sql, da, function(err, rs) {
+            connection.release()
+            if (err) {
+                console.log(err);
+                res.json(500, {"result":500});
+                return;
+            }
+            res.json(200, {"result":200});
+        }) // connection
+    }) // pool
 
 });
 
@@ -78,17 +95,26 @@ router.post('/new', function(req, res, next) {
 router.get('/edit/:id', function(req, res, next) {
     var nid = req.params.id;
     var sql = "select * from notice where notice_idx=?";
-    conn.query(sql, nid, function(err, row) {
-        if (err) {
-            res.json(500, {"result":500});
-            return;
+    pool.getConnection((er, connection)=>{
+        if (er) {
+            connection.release()
+            throw er
+            return
         }
-        res.render('manager/index', {
-            view: 'notice/edit',
-            title: '공지사항 수정',
-            notice: row[0]
-        });
-    })//conn
+
+        connection.query(sql, nid, function(err, row) {
+            connection.release()
+            if (err) {
+                res.json(500, {"result":500});
+                return;
+            }
+            res.render('manager/index', {
+                view: 'notice/edit',
+                title: '공지사항 수정',
+                notice: row[0]
+            });
+        })//connection
+    })// pool
 });
 
 
@@ -105,13 +131,21 @@ router.post('/edit/:id', function(req, res, next) {
             nid
     ];
     var sql = "update notice set notice_title=?, notice_text=? where notice_idx=?";
-    conn.query(sql, da, function(err, row) {
-        if (err) {
-            res.json(500, {"result":500});
-            return;
+    pool.getConnection((er, connection)=>{
+        if (er) {
+            connection.release()
+            throw er
+            return
         }
-        res.json(200, {"result":200});
-    })//conn
+        connection.query(sql, da, function(err, row) {
+            connection.release()
+            if (err) {
+                res.json(500, {"result":500});
+                return;
+            }
+            res.json(200, {"result":200});
+        })//conn
+    })// pool
 });
 
 
@@ -133,21 +167,31 @@ router.get('/:id', function(req, res, next) {
         date_format(notice_date, '%Y년 %m월 %d일') as notice_date
     FROM notice
     WHERE notice_idx=?`;
-    conn.query(sql, nid, function(err, result) {
-        if (err) {
-            res.json(500, {"result":500});
-            return;
-        }
 
-        if (result.length < 1) {
-            res.send(204, {result : 'no content'})
+    pool.getConnection((er, connection)=>{
+        if (er) {
+            connection.release()
+            throw er
             return
         }
-        res.send(200, {
-            result : 'success',
-            notice: result[0]
-        });
-    })//conn
+
+        connection.query(sql, nid, function(err, result) {
+            connection.release()
+            if (err) {
+                res.json(500, {"result":500});
+                return;
+            }
+
+            if (result.length < 1) {
+                res.send(204, {result : 'no content'})
+                return
+            }
+            res.send(200, {
+                result : 'success',
+                notice: result[0]
+            });
+        }) // conn
+    }) // pool
 
 });
 
@@ -161,14 +205,22 @@ router.get('/:id', function(req, res, next) {
 router.delete('/:id', function(req, res, next) {
     var nid = req.params.id;
     var sql = "delete from notice where notice_idx=?";
-    conn.query(sql, nid, function(err, row) {
-        if (err) {
-            res.json(500, {"result":500});
-            return;
-        }
 
-        res.json(200, {"result":200});
-    })//conn
+    pool.getConnection((er, connection)=>{
+        if (er) {
+            connection.release()
+            throw er
+            return
+        }
+        connection.query(sql, nid, function(err, row) {
+            connection.release()
+            if (err) {
+                res.json(500, {"result":500});
+                return;
+            }
+            res.json(200, {"result":200});
+        }) // conn
+    }) // pool
 
 });
 

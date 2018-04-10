@@ -109,7 +109,7 @@ router.get('/modules/:lm_idx', isAuth, (req,res,next)=>{
                 return
             }
 
-            console.log(commentResult)
+            // console.log(commentResult)
             res.send(200, {
                 result: 'success',
                 comments : commentResult
