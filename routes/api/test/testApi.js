@@ -20,6 +20,88 @@ var fileUpload = require('express-fileupload');
 
 
 
+router.get('/get', (req, res, next)=>{
+    // 플랜 등록 쿼리
+    var tq = `
+    SELECT
+        L.lec_idx 			          as 	 lec_idx,
+        L.lec_startDate 	      as 	 lec_startDate,
+        L.lec_endDate		     as 	lec_endDate,
+        L.lec_title 		           as 	  lec_title,
+        L.lec_personnel 	     as 	lec_personnel,
+        L.lec_target		        as 	   lec_target,
+        L.lec_time		             as 	lec_time,
+        L.lec_content		      as 	 lec_content,
+        L.lec_goal			         as 	lec_goal,
+        L.lec_effect		         as 	lec_effect,
+        L.lec_file			            as 	   lec_file,
+        L.lec_flag			          as 	  lec_flag,
+        L.lec_sessionCount	  as	  lec_sessionCount,
+
+        LS.ls_idx			           as	ls_idx,
+        LS.ls_title			            as 	ls_title,
+        LS.ls_aplDate			   as 	ls_aplDate,
+        LS.ls_location		        as	ls_location,
+        date_format(LS.ls_startDate, '%Y-%m-%d')   	 as  ls_startDate,
+        date_format(LS.ls_endDate,   '%Y-%m-%d')    as  ls_endDate,
+        date_format(LS.ls_startTime, '%H:%i')		        as	ls_startTime,
+        date_format(LS.ls_endTime, 	 '%H:%i')	   	       as  ls_endTime,
+
+        LSC.lsc_idx 		as 	lsc_idx,
+        LSC.lsc_title		as	lsc_title,
+        date_format(LSC.lsc_date, '%Y-%m-%d')   	as  lsc_date,
+
+        LT.lt_idx			as	lt_idx,
+        LT.lt_title			as	lt_title,
+        date_format(LT.lt_startTime	, '%H:%i')		as	lt_startTime,
+        date_format(LT.lt_startTime	, '%H:%i')		as 	lt_endTime,
+
+        LM.lm_idx           as  lm_idx,
+        LM.lm_title         as  lm_title,
+        LM.lm_text          as  lm_text,
+        LM.lm_type          as  lm_type,
+        date_format(LM.lm_startTime, '%H:%i')     	as  lm_startTime,
+        date_format(LM.lm_endTime, 	 '%H:%i')       as  lm_endTime
+
+
+    FROM lecture L
+        LEFT    JOIN lecture_session LS
+        ON      L.lec_idx = LS.lec_idx
+
+        LEFT    JOIN lecture_session_class LSC
+        ON      LS.ls_idx = LSC.ls_idx
+
+        LEFT    JOIN lecture_timetable LT
+        ON      LSC.lsc_idx =LT.lsc_idx
+
+        LEFT    JOIN lecture_module LM
+        ON      LT.lt_idx = LM.lt_idx
+
+
+    WHERE
+        L.lec_idx=9 and L.tutor_idx=1`
+
+
+
+    conn.query(tq, (err, result)=>{
+        if (err) {
+            console.log(err);
+            res.send(500, {result:'error'})
+            return
+        }
+        res.send(200, {result:result})
+    })
+
+})
+
+
+
+
+
+
+
+
+
 router.get('/push', (req, res, next)=>{
     // 플랜 등록 쿼리
     var tq = `

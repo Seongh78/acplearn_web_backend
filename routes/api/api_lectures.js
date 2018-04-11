@@ -121,8 +121,8 @@ router.delete('/:id', (req, res, next)=>{
 
 
 
-// ====== (O) 강의상세 - 신규 ====== //
-router.get('/dt/:id', (req, res, next)=>{
+// ====== (Dev) 강의상세 - 신규 TEST ====== //
+router.get('/detail/:id', (req, res, next)=>{
 
     // 파라미터
     var usr_idx = req.user.user.tutor_idx; // 유저아이디
@@ -196,10 +196,16 @@ router.get('/dt/:id', (req, res, next)=>{
             L.lec_idx=? and L.tutor_idx=?`
     }// q
     var lecture;
-    var sessions = timetables = modules = new Array()
+    var sessions = []
+    var sessionClass = []
+    var timetables = []
+    var modules = []
 
     // 임시저장소 - 푸시할 데이터 임시보관: 중복방지
-    var tempSessions = tempClass = tempTimetables = tempModules = {}
+    var tempSessions = []
+    var tempClass = []
+    var tempTimetables = []
+    var tempModules = []
 
      // 현재 돌고있는 차시의 배열 - 차시가 push될 때 차시의 번지수를 기억함
     var sessionCount            = -1,
@@ -217,7 +223,7 @@ router.get('/dt/:id', (req, res, next)=>{
                 console.log(lectureErr);
                 return res.status(500).send({result : 'lectureErr'})
             }
-            // console.log(lectureResult.length);
+
 
             // 결과값이 없는경우 end
             if ( lectureResult.length<1 ) {
@@ -239,8 +245,355 @@ router.get('/dt/:id', (req, res, next)=>{
                 lec_goal                     : lectureResult[0].lec_goal,
                 lec_effect                  : lectureResult[0].lec_effect,
                 lec_target                  : lectureResult[0].lec_target,
-                sessions : new Array()
+                sessions : []
             }// lecture
+
+
+
+
+            // 모델 만들기
+            var keys = Object.keys(lectureResult)
+            var leng = lectureResult.length-1
+
+            console.log("lectureResult : ", lectureResult.length);
+            for(var ii  in  lectureResult){
+
+                // 회차
+                if(lectureResult[ii].ls_idx != null){
+                    var ddd = {
+                        ls_idx                  : lectureResult[ii].ls_idx,
+                        ls_startDate        : lectureResult[ii].ls_startDate,
+                        ls_endDate         : lectureResult[ii].ls_endDate,
+                        ls_aplDate          : lectureResult[ii].ls_aplDate,
+                        ls_title                 : lectureResult[ii].ls_title,
+                        ls_location          : lectureResult[ii].ls_location,
+                        ls_startTime        : lectureResult[ii].ls_startTime,
+                        ls_endTime         : lectureResult[ii].ls_endTime,
+                        sessionClass        : []
+                    }
+                    if (tempSessions.length<1) {
+                        tempSessions.push(ddd)
+                    }else{
+                        if (lectureResult[ii-1].ls_idx  != lectureResult[ii].ls_idx)
+                            tempSessions.push(ddd)
+                    }
+
+                }
+
+                // 집합교육
+                if(lectureResult[ii].lsc_idx != null){
+                    var lsc = {
+                        ls_idx         : lectureResult[ii].ls_idx,
+                        lsc_idx         : lectureResult[ii].lsc_idx,
+                        lsc_title        : lectureResult[ii].lsc_title,
+                        lsc_date       : lectureResult[ii].lsc_date,
+                        timetables    : []
+                    }
+                    if (tempClass.length<1) {
+                        tempClass.push(lsc)
+                    }else{
+                        if (lectureResult[ii-1].lsc_idx  != lectureResult[ii].lsc_idx)
+                            tempClass.push(lsc)
+                    }
+
+                }
+
+                // 시간표
+                if(lectureResult[ii].lt_idx != null){
+                    var lt = {
+                        lsc_idx			     :	 lectureResult[ii].lsc_idx,
+                        lt_idx			     :	 lectureResult[ii].lt_idx,
+                        lt_startTime    :	 lectureResult[ii].lt_startTime,
+                        lt_endTime	   : 	lectureResult[ii].lt_endTime,
+                        lt_title			 :	  lectureResult[ii].lt_title,
+                        modules         : []
+                    }
+
+                    if (tempTimetables.length<1) {
+                        tempTimetables.push(lt)
+                    }else{
+                        if (lectureResult[ii-1].lt_idx  != lectureResult[ii].lt_idx)
+                            tempTimetables.push(lt)
+                    }
+                }
+
+                // 강의모듈
+                if(lectureResult[ii].lm_idx != null){
+                    var lm = {
+                        lt_idx                 : lectureResult[ii].lt_idx,
+                        lm_idx                 : lectureResult[ii].lm_idx,
+                        lm_startTime       : lectureResult[ii].lm_startTime,
+                        lm_endTime        : lectureResult[ii].lm_endTime,
+                        lm_title                : lectureResult[ii].lm_title,
+                        lm_text                : lectureResult[ii].lm_text,
+                        lm_type               : lectureResult[ii].lm_type
+                    }
+                    if (tempModules.length<1) {
+                        tempModules.push(lm)
+                    }else{
+                        if (lectureResult[ii-1].lm_idx  != lectureResult[ii].lm_idx)
+                            tempModules.push(lm)
+                    }
+                }
+
+            }// for - 모델만들기
+
+
+
+
+            // res.send({
+            //     tempSessions,
+            //     tempClass,
+            //     tempTimetables,
+            //     tempModules,
+            // })
+            // return
+
+
+
+
+
+
+            var sleng, cleng, tleng, mleng;
+            for(var sid  in  tempSessions){ // tempSessions
+
+                for(var cid  in tempClass){ // tempClass
+                    if (tempSessions[sid].ls_idx  ===  tempClass[cid].ls_idx){
+                        tempSessions[sid].sessionClass.push(tempClass[cid])
+
+                        cleng = tempSessions[sid].sessionClass.length-1
+                        for(var tid  in  tempTimetables){ // tempTimetables
+                            if (tempSessions[sid].sessionClass[cleng].lsc_idx  ===  tempTimetables[tid].lsc_idx){
+                                tempSessions[sid].sessionClass[cleng].timetables.push(tempTimetables[tid])
+
+                                tleng = tempSessions[sid].sessionClass[cleng].timetables.length-1
+                                for(var mid  in  tempModules){ // tempModules
+                                    if (tempSessions[sid].sessionClass[cleng].timetables[tleng].lt_idx  ===  tempModules[mid].lt_idx){
+                                        tempSessions[sid].sessionClass[cleng].timetables[tleng].modules.push(tempModules[mid])
+                                    }
+                                } // tempModules
+
+                            }
+                        } // tempTimetables
+
+                    }
+                } // tempClass
+
+            } // tempSessions
+
+
+            lecture.sessions=tempSessions
+
+
+
+            // KPI쿼리
+            connection.query(q.kpi, [lec_idx], (kpiErr, kpiResult)=>{
+                if(kpiErr){ // Error
+                    connection.release()
+                    console.log(kpiErr);
+                    return res.status(500).send({result : 'kpiErr'})
+                }
+
+                // console.log(kpiResult);
+
+                // 참여기업
+                connection.query(q.companies, [lec_idx], (companiesErr, companiesResult)=>{
+                    if(companiesErr){ // Error
+                        connection.release()
+                        console.log(companiesErr);
+                        return res.status(500).send({result : 'companiesErr'})
+                    }
+
+                    // 그룹
+                    connection.query(q.group, [lec_idx], (groupErr, groupResult)=>{
+                        if(groupErr){ // Error
+                            connection.release()
+                            console.log(groupErr);
+                            return res.status(500).send({result : 'groupErr'})
+                        }
+
+                        // 수강생
+                        connection.query(q.students, [lec_idx], (studentsErr, studentsResult)=>{
+                            if(studentsErr){ // Error
+                                connection.release()
+                                console.log(studentsErr);
+                                return res.status(500).send({result : 'studentsErr'})
+                            }
+
+                            connection.release()
+                            res.send(200, {
+                                result               :'success',
+                                lecture             : lecture,
+                                companies      : companiesResult,
+                                groups            : groupResult,
+                                students         : studentsResult,
+                                kpi                  : kpiResult
+                            })// send
+
+                        })// 수강생
+                    })// 그룹
+                })// 참여기업
+            })// KPI쿼리
+
+
+        })// conn
+    })// pool
+
+
+})
+// ====== (Dev) 강의상세 - 신규 TEST ====== //
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ====== (O) 강의상세 - 신규 ====== //
+router.get('/dt/:id', (req, res, next)=>{
+
+    // 파라미터
+    var usr_idx = req.user.user.tutor_idx; // 유저아이디
+    var lec_idx = req.params.id // 강의아이디
+
+    // 쿼리
+    var q={
+        group           : "SELECT * FROM `group` WHERE lec_idx=? ORDER BY group_idx ASC",
+        students       : `SELECT * FROM company C , registration R  WHERE R.lec_idx=? and R.com_code=C.com_code`,
+        companies   : 'SELECT * FROM company_manager CM, company C WHERE CM.lec_idx=? and CM.com_code=C.com_code',
+        kpi                : ` SELECT       CC2.cc2_idx, CC2.cc2_name
+                                FROM        lecture_kpi LK, capability_category2 CC2
+                                WHERE      LK.lec_idx=? and CC2.cc2_idx=LK.cc2_idx`,
+        lecture      :
+        `
+            SELECT
+            	L.lec_idx 			          as 	 lec_idx,
+            	L.lec_startDate 	      as 	 lec_startDate,
+            	L.lec_endDate		     as 	lec_endDate,
+            	L.lec_title 		           as 	  lec_title,
+            	L.lec_personnel 	     as 	lec_personnel,
+            	L.lec_target		        as 	   lec_target,
+            	L.lec_time		             as 	lec_time,
+            	L.lec_content		      as 	 lec_content,
+            	L.lec_goal			         as 	lec_goal,
+            	L.lec_effect		         as 	lec_effect,
+            	L.lec_file			            as 	   lec_file,
+            	L.lec_flag			          as 	  lec_flag,
+            	L.lec_sessionCount	  as	  lec_sessionCount,
+
+            	LS.ls_idx			           as	ls_idx,
+            	LS.ls_title			            as 	ls_title,
+            	LS.ls_aplDate			   as 	ls_aplDate,
+            	LS.ls_location		        as	ls_location,
+                date_format(LS.ls_startDate, '%Y-%m-%d')   	 as  ls_startDate,
+                date_format(LS.ls_endDate,   '%Y-%m-%d')    as  ls_endDate,
+            	date_format(LS.ls_startTime, '%H:%i')		        as	ls_startTime,
+            	date_format(LS.ls_endTime, 	 '%H:%i')	   	       as  ls_endTime,
+
+            	LSC.lsc_idx 		as 	lsc_idx,
+            	LSC.lsc_title		as	lsc_title,
+                date_format(LSC.lsc_date, '%Y-%m-%d')   	as  lsc_date,
+
+            	LT.lt_idx			as	lt_idx,
+            	LT.lt_title			as	lt_title,
+            	date_format(LT.lt_startTime	, '%H:%i')		as	lt_startTime,
+            	date_format(LT.lt_startTime	, '%H:%i')		as 	lt_endTime,
+
+            	LM.lm_idx           as  lm_idx,
+            	LM.lm_title         as  lm_title,
+                LM.lm_text          as  lm_text,
+                LM.lm_type          as  lm_type,
+                date_format(LM.lm_startTime, '%H:%i')     	as  lm_startTime,
+                date_format(LM.lm_endTime, 	 '%H:%i')       as  lm_endTime
+
+
+            FROM lecture L
+                LEFT    JOIN lecture_session LS
+                ON      L.lec_idx = LS.lec_idx
+
+                LEFT    JOIN lecture_session_class LSC
+                ON      LS.ls_idx = LSC.ls_idx
+
+                LEFT    JOIN lecture_timetable LT
+                ON      LSC.lsc_idx =LT.lsc_idx
+
+                LEFT    JOIN lecture_module LM
+                ON      LT.lt_idx = LM.lt_idx
+
+
+            WHERE
+                L.lec_idx=? and L.tutor_idx=?
+        `
+    }// q
+
+    var lecture;
+    var sessions = []
+    var sessionClass = []
+    var timetables = []
+    var modules = []
+
+    // 임시저장소 - 푸시할 데이터 임시보관: 중복방지
+    var tempSessions = {}
+    var tempClass = {}
+    var tempTimetables = {}
+    var tempModules = {}
+
+     // 현재 돌고있는 차시의 배열 - 차시가 push될 때 차시의 번지수를 기억함
+    var sessionCount            = -1,
+          sessionClassCount    = -1,
+          timetableCount        = -1,
+          moduleCount           = -1
+
+
+
+
+    pool.getConnection((er, connection)=>{
+        connection.query(q.lecture, [lec_idx, usr_idx], (lectureErr, lectureResult)=>{
+            if(lectureErr){ // Error
+                connection.release()
+                console.log(lectureErr);
+                return res.status(500).send({result : 'lectureErr'})
+            }
+
+
+            // 결과값이 없는경우 end
+            if ( lectureResult.length<1 ) {
+                connection.release()
+                res.status(200).send({result : 'No content'})
+                return
+            }// if
+
+
+            lecture = {
+                lec_idx                      : lectureResult[0].lec_idx,
+                lec_title                     : lectureResult[0].lec_title,
+                lec_startDate            : lectureResult[0].lec_startDate,
+                lec_endDate             : lectureResult[0].lec_endDate,
+                lec_flag                     : lectureResult[0].lec_flag,
+                lec_sessionCount     : lectureResult[0].lec_sessionCount,
+                lec_personnel           : lectureResult[0].lec_personnel,
+                lec_content               : lectureResult[0].lec_content,
+                lec_goal                     : lectureResult[0].lec_goal,
+                lec_effect                  : lectureResult[0].lec_effect,
+                lec_target                  : lectureResult[0].lec_target,
+                sessions : []
+            }// lecture
+
+
+//  TEST code
+            // for(var i  in  lectureResult){
+            //     console.log("lectureResult.length :  ", lectureResult.length);
+            //     console.log("lectureResult[ii].lt_idx : ", lectureResult[i].lt_idx);
+            // }
+//  TEST code
 
 
             // 모델 만들기
@@ -282,28 +635,30 @@ router.get('/dt/:id', (req, res, next)=>{
                     lm_text                : lectureResult[ii].lm_text,
                     lm_type               : lectureResult[ii].lm_type
                 }
+                console.log(tempModules);
 
 
                  // 세션모델
                 if( lectureResult[ii].ls_idx != null ){
                     if (ii==0) { // 첫번째 값 확인
                         sessions.push(tempSessions)
-                        sessionCount = (sessionCount < 0)? 0 : sessionCount+1
+                        sessionCount = 0
 
                         // 집합교육모델
                         if ( lectureResult[ii].lsc_idx != null ) {
                             sessions[sessionCount].sessionClass.push(tempClass)
-                            sessionClassCount = (sessionClassCount < 0) ? 0 : sessionClassCount+1
+                            sessionClassCount = 0
 
                             // 시간표모델
                             if( lectureResult[ii].lt_idx != null ){
                                 sessions[sessionCount].sessionClass[sessionClassCount].timetables.push(tempTimetables)
-                                timetableCount= (timetableCount < 0) ? 0 : timetableCount+1
+                                timetableCount= 0
 
                                 // 강의모듈 모델
-                                if( lectureResult[ii].lm_idx != null ){
+                                if( lectureResult[ii].lm_idx != null && lectureResult[ii].lm_idx != undefined ){
+                                    // console.log(sessions[sessionCount].sessionClass[sessionClassCount]);
                                     sessions[sessionCount].sessionClass[sessionClassCount].timetables[timetableCount].modules.push(tempModules)
-                                    moduleCount= (moduleCount < 0) ? 0 : moduleCount+1
+                                    moduleCount= 0
                                 }// 강의모듈 모델
 
                             }// 시간표모델
@@ -329,16 +684,16 @@ router.get('/dt/:id', (req, res, next)=>{
 
                             // 시간표모델
                             if( lectureResult[ii].lt_idx != null ){ // Null이 아닌경우
+                                console.log(" lectureResult[ii].lt_idx : ", lectureResult[ii].lt_idx);
                                 //전 아이디와 다를경우 푸시
                                 if( lectureResult[ii].lt_idx != lectureResult[ii-1].lt_idx ){
-                                    // console.log("sessions[sessionCount].sessionClass : ", sessionClassCount);
                                     sessions[sessionCount].sessionClass[sessionClassCount].timetables.push(tempTimetables)
                                     timetableCount=timetableCount<0? 0 : timetableCount+1
                                 }
 
                                 // 강의모듈 모델
                                 if( lectureResult[ii].lm_idx != null ){
-                                    if( lectureResult[ii].lm_idx !=lectureResult[ii-1].lm_idx ){
+                                    if( lectureResult[ii].lm_idx != lectureResult[ii-1].lm_idx ){
                                         sessions[sessionCount].sessionClass[sessionClassCount].timetables[timetableCount].modules.push(tempModules)
                                     }
                                 }// 강의모듈 모델
@@ -835,6 +1190,7 @@ router.put('/create/summary', (req, res, next)=>{
 
 
 
+
 // ====== (Dev) 신규강의 - 일정/시간표 : lecture_session ====== //
 router.post('/create/sessions', (req, res, next)=>{
 
@@ -884,6 +1240,7 @@ router.post('/create/sessions', (req, res, next)=>{
         lt_title,
         lt_startTime,
         lt_endTime,
+        lt_seq,
         lsc_idx
     ) VALUES ?`
 
@@ -896,6 +1253,7 @@ router.post('/create/sessions', (req, res, next)=>{
         lm_startTime,
         lm_endTime,
         lm_teacher,
+        lm_seq,
         lt_idx
     ) VALUES ?`
 
@@ -1071,6 +1429,7 @@ router.post('/create/sessions', (req, res, next)=>{
                                         sessions[ii].sessionClass[jj].timetables[kk].lt_title,
                                         sessions[ii].sessionClass[jj].timetables[kk].lt_startTime,
                                         sessions[ii].sessionClass[jj].timetables[kk].lt_endTime,
+                                        (jj+1),
                                         RSclassInsert.insertId
                                     ])
                                 } // #3
@@ -1102,21 +1461,28 @@ router.post('/create/sessions', (req, res, next)=>{
                             for(var ii=0;  ii<sessionsKeys.length;  ii++){
                                 for(var jj  in  sessions[ii].sessionClass){
                                     for(var kk  in  sessions[ii].sessionClass[jj].timetables){
-                                        for(var ll  in  sessions[ii].sessionClass[jj].timetables[kk].modules){
-                                            tempModules.push([
-                                                sessions[ii].sessionClass[jj].timetables[kk].modules[ll].lm_type,
-                                                sessions[ii].sessionClass[jj].timetables[kk].modules[ll].lm_title,
-                                                sessions[ii].sessionClass[jj].timetables[kk].modules[ll].lm_text,
-                                                sessions[ii].sessionClass[jj].timetables[kk].modules[ll].lm_startTime,
-                                                sessions[ii].sessionClass[jj].timetables[kk].modules[ll].lm_endTime,
-                                                sessions[ii].sessionClass[jj].timetables[kk].modules[ll].lm_teacher,
-                                                RStimetableInsert.insertId
-                                            ])
-                                        } // #4
+
+                                            for(var ll  in  sessions[ii].sessionClass[jj].timetables[kk].modules){
+                                                console.log("RStimetableInsert : ", RStimetableInsert.insertId);
+                                                tempModules.push([
+                                                    sessions[ii].sessionClass[jj].timetables[kk].modules[ll].lm_type,
+                                                    sessions[ii].sessionClass[jj].timetables[kk].modules[ll].lm_title,
+                                                    sessions[ii].sessionClass[jj].timetables[kk].modules[ll].lm_text,
+                                                    sessions[ii].sessionClass[jj].timetables[kk].modules[ll].lm_startTime,
+                                                    sessions[ii].sessionClass[jj].timetables[kk].modules[ll].lm_endTime,
+                                                    sessions[ii].sessionClass[jj].timetables[kk].modules[ll].lm_teacher,
+                                                    (kk+1),
+                                                    RStimetableInsert.insertId
+                                                ])
+                                            } // #4
+
                                         RStimetableInsert.insertId++ // INSERT아이디
                                     } // #3
                                 } // #2
                             } // #1
+
+
+                            console.log("end : ", RStimetableInsert.insertId);
 
                             // 모듈 없는경우
                             if (tempModules.length < 1  ||  tempModules.length == undefined) {
