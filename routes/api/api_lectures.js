@@ -437,6 +437,7 @@ router.get('/detail/:id', (req, res, next)=>{
 
 
         })// conn
+
     })// pool
 
 
