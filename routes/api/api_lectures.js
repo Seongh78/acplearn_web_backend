@@ -38,8 +38,8 @@ router.get('/', (req, res, next)=>{
         L.lec_idx,
         L.lec_title,
         L.lec_flag,
-        date_format(L.lec_startDate, '%Y년 %c월 %d일') as lec_startDate,
-        date_format(L.lec_endDate, '%Y년 %c월 %d일') as lec_endDate,
+        date_format(L.lec_startDate, '%Y-%m-%d') as lec_startDate,
+        date_format(L.lec_endDate, '%Y-%m-%d') as lec_endDate,
         (select count(*) from lecture_session LS where LS.lec_idx=L.lec_idx) as lec_sessionCount,
 		(select count(*) from registration R where R.lec_idx=L.lec_idx) as lec_personnel
     FROM
@@ -131,11 +131,34 @@ router.get('/detail/:id', (req, res, next)=>{
     // 쿼리
     var q={
         group           : "SELECT * FROM `group` WHERE lec_idx=? ORDER BY group_idx ASC",
-        students       : `SELECT * FROM company C , registration R  WHERE R.lec_idx=? and R.com_code=C.com_code`,
-        companies   : 'SELECT * FROM company_manager CM, company C WHERE CM.lec_idx=? and CM.com_code=C.com_code',
-        kpi                : ` SELECT       CC2.cc2_idx, CC2.cc2_name
-                                FROM        lecture_kpi LK, capability_category2 CC2
-                                WHERE      LK.lec_idx=? and CC2.cc2_idx=LK.cc2_idx`,
+
+        students       : `
+        SELECT *
+        FROM
+            company C ,
+            registration R
+        WHERE
+        R.lec_idx=? and R.com_code=C.com_code`,
+
+        companies   : `
+        SELECT *
+        FROM
+            company_manager CM,
+            company C
+        WHERE
+            CM.lec_idx=? and CM.com_code=C.com_code`,
+
+        kpi                : `
+        SELECT
+            LK.lk_idx,
+            CC2.cc2_idx,
+            CC2.cc2_name
+        FROM
+            lecture_kpi LK,
+            capability_category2 CC2
+        WHERE
+            LK.lec_idx=? and CC2.cc2_idx=LK.cc2_idx`,
+
         lecture      : `
         SELECT
         	L.lec_idx 			          as 	 lec_idx,
@@ -778,248 +801,6 @@ router.get('/dt/:id', (req, res, next)=>{
 
 
 
-// ====== (O) 강의상세 ====== //
-router.get('/dt2/:id', (req, res, next)=>{
-
-    // 파라미터
-    var usr_idx = req.user.user.tutor_idx; // 유저아이디
-    var lec_idx = req.params.id // 강의아이디
-
-    // 쿼리
-    var q={
-        group           : "SELECT * FROM `group` WHERE lec_idx=? ORDER BY group_idx ASC",
-        students       : `SELECT * FROM company C , registration R  WHERE R.lec_idx=? and R.com_code=C.com_code`,
-        companies   : 'SELECT * FROM company_manager CM, company C WHERE CM.lec_idx=? and CM.com_code=C.com_code',
-        kpi                : ` SELECT       CC2.cc2_idx, CC2.cc2_name
-                                FROM        lecture_kpi LK, capability_category2 CC2
-                                WHERE      LK.lec_idx=? and CC2.cc2_idx=LK.cc2_idx`,
-
-        lecture      : `SELECT
-                            L.lec_idx 			      as 	lec_idx,
-                        	L.lec_startDate 	  as 	lec_startDate,
-                        	L.lec_endDate 		 as 	lec_endDate,
-                        	L.lec_title 		       as 	  lec_title,
-                        	L.lec_personnel 	 as 	lec_personnel,
-                        	L.lec_target		    as 	   lec_target,
-                        	L.lec_time		         as 	lec_time,
-                        	L.lec_content		   as 	 lec_content,
-                        	L.lec_goal			     as 	lec_goal,
-                        	L.lec_effect		     as 	lec_effect,
-                        	L.lec_file			        as 	  lec_file,
-                        	L.lec_flag			       as 	 lec_flag,
-                        	L.lec_sessionCount	as	 lec_sessionCount,
-
-                        	LS.ls_idx			    as	    ls_idx,
-                            date_format(LS.ls_startDate , '%Y-%m-%d')     as      ls_startDate,
-                            date_format(LS.ls_endDate , '%Y-%m-%d')      as      ls_endDate,
-                        	LS.ls_title			     as 	 ls_title,
-                        	LS.ls_location		 as	     ls_location,
-                        	date_format(LS.ls_startTime	, '%H:%i')	as	    ls_startTime,
-                        	date_format(LS.ls_endTime, '%H:%i')	   as	   ls_endTime,
-
-                        	LT.lt_idx			      as	 lt_idx,
-                        	date_format(LT.lt_startTime	, '%H:%i')			  as	 lt_startTime,
-                        	date_format(LT.lt_startTime	, '%H:%i')		     as 	lt_endTime,
-                        	LT.lt_title			       as	  lt_title,
-
-                            LM.lm_idx                as   lm_idx,
-                            date_format(LM.lm_startTime	, '%H:%i')     as   lm_startTime,
-                            date_format(LM.lm_endTime	, '%H:%i')      as   lm_endTime,
-                            LM.lm_title              as   lm_title,
-                            LM.lm_text              as   lm_text,
-                            LM.lm_type              as  lm_type
-
-                        FROM lecture L
-                            LEFT JOIN lecture_session LS
-                            LEFT JOIN lecture_timetable LT
-                            LEFT JOIN lecture_module LM
-                            ON LT.lt_idx=LM.lt_idx
-                            ON LS.ls_idx=LT.ls_idx
-                            ON L.lec_idx=LS.lec_idx
-                        WHERE L.lec_idx=? and L.tutor_idx=?  `
-    }
-    var lecture;
-    var sessions = timetables = modules = new Array()
-    var tempSessions = tempTimetables = tempModules = {} // 임시저장소 - 푸시할 데이터 임시보관: 중복방지
-
-    var sessionCount        = -1 // 현재 돌고있는 차시의 배열 - 차시가 push될 때 차시의 번지수를 기억함
-    var timetableCount    = -1
-    var moduleCount       = -1
-
-
-
-
-    pool.getConnection((er, connection)=>{
-        connection.query(q.lecture, [lec_idx, usr_idx], (lectureErr, lectureResult)=>{
-            if(lectureErr){ // Error
-                connection.release()
-                console.log(lectureErr);
-                return res.status(500).send({result : 'lectureErr'})
-            }
-            // console.log(lectureResult.length);
-
-            // 결과값이 없는경우 end
-            if ( lectureResult.length<1 ) {
-                connection.release()
-                res.status(200).send({result : 'No content'})
-                return
-            }// if
-
-
-            lecture = {
-                lec_idx                      : lectureResult[0].lec_idx,
-                lec_title                     : lectureResult[0].lec_title,
-                lec_startDate            : lectureResult[0].lec_startDate,
-                lec_endDate             : lectureResult[0].lec_endDate,
-                lec_flag                     : lectureResult[0].lec_flag,
-                lec_sessionCount     : lectureResult[0].lec_sessionCount,
-                lec_personnel           : lectureResult[0].lec_personnel,
-                lec_content               : lectureResult[0].lec_content,
-                lec_goal                     : lectureResult[0].lec_goal,
-                lec_effect                  : lectureResult[0].lec_effect,
-                lec_target                  : lectureResult[0].lec_target,
-                sessions : new Array()
-            }// lecture
-
-
-            // 모델 만들기
-            for(var ii  in  lectureResult){
-
-                tempSessions = {
-                    ls_idx                  : lectureResult[ii].ls_idx,
-                    lec_idx                : lectureResult[ii].lec_idx,
-                    ls_startDate        : lectureResult[ii].ls_startDate,
-                    ls_endDate         : lectureResult[ii].ls_endDate,
-                    ls_title                 : lectureResult[ii].ls_title,
-                    ls_location          : lectureResult[ii].ls_location,
-                    ls_startTime            : lectureResult[ii].ls_startTime,
-                    ls_endTime             : lectureResult[ii].ls_endTime,
-                    timetables          : []
-                }
-                tempTimetables = {
-                    lt_idx			     :	 lectureResult[ii].lt_idx,
-                    lt_startTime    :	 lectureResult[ii].lt_startTime,
-                    lt_endTime	   : 	lectureResult[ii].lt_endTime,
-                    lt_title			 :	  lectureResult[ii].lt_title,
-                    modules         : []
-                }
-                tempModules = {
-                    lm_idx                 : lectureResult[ii].lm_idx,
-                    lm_startTime       : lectureResult[ii].lm_startTime,
-                    lm_endTime        : lectureResult[ii].lm_endTime,
-                    lm_title                : lectureResult[ii].lm_title,
-                    lm_text                : lectureResult[ii].lm_text,
-                    lm_type               : lectureResult[ii].lm_type
-                }
-
-                 // 세션모델
-                if( lectureResult[ii].ls_idx != null ){
-                    if (ii==0) { // 첫번째 값 확인
-                        sessions.push(tempSessions)
-                        sessionCount=sessionCount<0? 0 : sessionCount+1
-                        // 시간표모델
-                        if( lectureResult[ii].lt_idx != null ){
-                            sessions[sessionCount].timetables.push(tempTimetables)
-                            timetableCount=timetableCount<0? 0 : timetableCount+1
-                            // 강의모듈 모델
-                            if( lectureResult[ii].lm_idx != null ){
-                                sessions[sessionCount].timetables[timetableCount].modules.push(tempModules)
-                                moduleCount=moduleCount<0? 0 : moduleCount+1
-                            }// 강의모듈 모델
-
-                        }// 시간표모델
-
-
-                    }else{
-                        if ( lectureResult[ii-1].ls_idx  !=  lectureResult[ii].ls_idx ) {// 같은세션 찾기
-                            sessions.push(tempSessions)
-                            sessionCount=sessionCount<0? 0 : sessionCount+1
-                            timetableCount=-1
-                        }
-
-                        // 시간표모델
-                        if( lectureResult[ii].lt_idx != null ){ // Null이 아닌경우
-                            //전 아이디와 다를경우 푸시
-                            if( lectureResult[ii].lt_idx != lectureResult[ii-1].lt_idx ){
-                                sessions[sessionCount].timetables.push(tempTimetables)
-                                timetableCount=timetableCount<0? 0 : timetableCount+1
-                            }
-
-                            // 강의모듈 모델
-                            if( lectureResult[ii].lm_idx != null ){
-                                if( lectureResult[ii].lm_idx !=lectureResult[ii-1].lm_idx ){
-                                    sessions[sessionCount].timetables[timetableCount].modules.push(tempModules)
-                                }
-                            }// 강의모듈 모델
-
-                        }// 시간표모델
-
-
-                    }// else
-
-                }// 세션모델
-
-            }// for - 모델만들기
-
-
-
-            // KPI쿼리
-            connection.query(q.kpi, [lec_idx], (kpiErr, kpiResult)=>{
-                if(kpiErr){ // Error
-                    connection.release()
-                    console.log(kpiErr);
-                    return res.status(500).send({result : 'kpiErr'})
-                }
-
-                console.log(kpiResult);
-
-                // 참여기업
-                connection.query(q.companies, [lec_idx], (companiesErr, companiesResult)=>{
-                    if(companiesErr){ // Error
-                        connection.release()
-                        console.log(companiesErr);
-                        return res.status(500).send({result : 'companiesErr'})
-                    }
-
-                    // 그룹
-                    connection.query(q.group, [lec_idx], (groupErr, groupResult)=>{
-                        if(groupErr){ // Error
-                            connection.release()
-                            console.log(groupErr);
-                            return res.status(500).send({result : 'groupErr'})
-                        }
-
-                        // 수강생
-                        connection.query(q.students, [lec_idx], (studentsErr, studentsResult)=>{
-                            if(studentsErr){ // Error
-                                connection.release()
-                                console.log(studentsErr);
-                                return res.status(500).send({result : 'studentsErr'})
-                            }
-
-                            connection.release()
-                            lecture.sessions = sessions
-                            res.send(200, {
-                                result               :'success',
-                                lecture             : lecture,
-                                companies      : companiesResult,
-                                groups            : groupResult,
-                                students         : studentsResult,
-                                kpi                  : kpiResult
-                            })// send
-
-                        })// 수강생
-                    })// 그룹
-                })// 참여기업
-            })// KPI쿼리
-
-
-        })// conn
-    })// pool
-
-
-})
-// ====== (O) 강의상세 ====== //
 
 
 
@@ -1043,52 +824,134 @@ router.post('/complete',  (req, res, next)=>{
     var student_count = req.body.student_count //학생수
     var session_count = req.body.session_count // 세션수
 
-    // 플래그변경
-    var completeSQL = `UPDATE lecture SET lec_flag='승인대기' WHERE lec_idx=? and tutor_idx=?`
-    var acplearnDaySQL = ` INSERT INTO lecture_acplearn_day(lad_date, ls_idx) VALUES ? ;`
+    // 플래그변경 쿼리
+    var completeSQL = `
+    UPDATE lecture SET lec_flag='승인대기' WHERE lec_idx=? and tutor_idx=?`
+
+    // 수강생정보 찾기
+    var studentsSQL = `
+    SELECT stu_idx FROM registration WHERE lec_idx = ?`
+
+    // 액플런데이 추가 쿼리
+    var acplearnDaySQL = `
+    INSERT INTO lecture_acplearn_day(lad_date, ls_idx, stu_idx) VALUES ?`
+
+    // 기존 데이터 초기화 쿼리
+    var ladDeleteSQL = `
+    DELETE
+    FROM
+    	lecture as L,
+    	lecture_session as LS,
+    	lecture_acplearn_day as LAD
+    WHERE
+    	L.lec_idx = ? and L.lec_idx = LS.lec_idx and LS.ls_idx = LAD.ls_idx`
 
     // 액플런데이 변수
-    var sdt , edt , dateDiff;
+    var sdt , edt , dateDiff;  //  시작, 종료, 차이
     var tempLAD = [] // 데이터모델
     var tempDate; // 임시저장 날짜
     var tempString=''
 
-    // 액플런데이 일수 구하기
-    var keys = Object.keys(sessions)
-    for(var ii  in  keys){
-        console.log(sessions[ii].ls_aplDate);
-        sdt = new Date(sessions[ii].ls_aplDate);
-        edt = new Date(sessions[ii].ls_endDate);
-        dateDiff = Math.ceil((edt.getTime()-sdt.getTime())/(1000*3600*24));
-
-        for(var jj=0;  jj <= dateDiff;  jj++){
-            console.log("1111111111");
-            tempDate = new Date(sdt)
-            tempDate.setDate(sdt.getDate()+ii)
-            // 날짜포맷
-            tempString     = tempDate.getFullYear()+"-"
-            tempString   += (tempDate.getMonth()+1) < 10 ? '0' : '' + (tempDate.getMonth()+1)+"-"
-            tempString   += (tempDate.getDate()+1)     < 10 ? '0' : '' + (tempDate.getDate()+1)
-            tempLad.push([tempString, sessions[ii].ls_idx, ])
-            console.log("22222222222");
-        }//
-    }//
-
-    console.log("tempLad >");
-    console.log(tempLad);
 
 
+
+    // pool
     pool.getConnection((er,connection)=>{
+
+
+        // 강의플래그 변경 쿼리
         connection.query(completeSQL, [lec_idx, tutor_idx], (completeErr, completeResult)=>{
-            connection.release()
             if( completeErr ){
+                connection.release()
                 console.log(completeErr);
                 res.send(500, {result:'completeErr'})
                 return
             }
 
-            res.send(200, { result : 'success' })
-        }) // connection
+            // 기존 액플런데이 삭제
+            connection.query(ladDeleteSQL, [lec_idx], (ladDeleteErr, ladDeleteResult)=>{
+                if( ladDeleteErr ){
+                    connection.release()
+                    console.log(ladDeleteErr);
+                    res.send(500, {result:'ladDeleteErr'})
+                    return
+                }
+
+
+                // 수강생찾기 쿼리
+                connection.query(studentsSQL, [lec_idx], (studentsErr, studentsResult)=>{
+                    if( studentsErr ){
+                        connection.release()
+                        console.log(studentsErr);
+                        res.send(500, {result:'studentsErr'})
+                        return
+                    }
+
+                    // 수강생이 있을경우 수강생 수만큼 액플런데이 생성
+                    if(studentsResult.length>0){
+
+                        try {
+                            // 액플런데이 일수 구하기
+                            var stdKeys = Object.keys(studentsResult) // 수강생 키
+                            var keys = Object.keys(sessions) // 회차 키
+
+                            for(var rid  in  stdKeys){// #0
+                                for(var sid  in  keys){ // #1
+                                    sdt = new Date(sessions[sid].ls_aplDate);  // 시작일
+                                    edt = new Date(sessions[sid].ls_endDate); // 종료일
+                                    dateDiff = Math.ceil((edt.getTime()-sdt.getTime())/(1000*3600*24)); // 차일
+
+                                    // 차시별 액플런데이 만들기
+                                    for(var ii=0;  ii <= dateDiff;  ii++){ // #2
+                                        // 증감연산
+                                        tempDate = new Date(sdt)
+                                        tempDate.setDate(sdt.getDate()+ii)
+
+                                        // 날짜포맷 만들기
+                                        tempString     = tempDate.getFullYear()+"-"
+                                        tempString   += (tempDate.getMonth()+1) + "-"
+                                        tempString   += tempDate.getDate()
+
+                                        // 데이터 푸시
+                                        tempLAD.push([
+                                            tempString, // 날짜
+                                            sessions[sid].ls_idx, // 회차 아이디
+                                            studentsResult[rid].stu_idx // 수강생 아이디
+                                        ])
+                                    }// #2
+                                }// #1
+                            }// # 0
+
+                        } catch (e) {
+                            console.log(e);
+                            res.send(500, { result : 'Error' })
+                            return
+                        }
+
+                        // 액플런데이 쿼리
+                        connection.query(acplearnDaySQL, [tempLAD], (aplearnDayErr, acplearnDayResult)=>{
+                            connection.release()
+                            if( aplearnDayErr ){
+                                console.log(aplearnDayErr);
+                                res.send(500, {result:'aplearnDayErr'})
+                                return
+                            }
+
+                            res.send(200, { result : 'success' })
+                        }) // 액플런데이 쿼리
+
+                    }else{
+                        connection.release()
+                        res.send(200, { result : 'success' })
+                        return
+                    }// else
+
+                })// 수강생찾기 쿼리
+
+            })// 기존 액플런데이 삭제
+
+        }) // 강의플래그 변경 쿼리
+
     }) // pool
 
 })
