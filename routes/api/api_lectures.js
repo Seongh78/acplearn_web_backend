@@ -839,9 +839,10 @@ router.post('/complete',  (req, res, next)=>{
     // 기존 데이터 초기화 쿼리
     var ladDeleteSQL = `
     DELETE
+        LAD
     FROM
-    	lecture as L,
-    	lecture_session as LS,
+    	lecture L,
+    	lecture_session LS,
     	lecture_acplearn_day as LAD
     WHERE
     	L.lec_idx = ? and L.lec_idx = LS.lec_idx and LS.ls_idx = LAD.ls_idx`
