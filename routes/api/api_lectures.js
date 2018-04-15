@@ -57,9 +57,9 @@ router.get('/', (req, res, next)=>{
         // 강의전 , 진행중은 하나로 표기
         if (req.query.lecType==='진행중' || req.query.lecType==='진행중') {
             console.log('111111111');
-            q += " and L.lec_flag='강의전' or L.lec_flag=?"
+            q += " and (L.lec_flag='강의전' or L.lec_flag=?)"
         }else{
-            q += " and L.lec_flag=? "
+            q += " and (L.lec_flag=?) "
         }
         lecParameter.push(req.query.lecType)
     }
@@ -250,6 +250,7 @@ router.get('/detail/:id', (req, res, next)=>{
 
             // 결과값이 없는경우 end
             if ( lectureResult.length<1 ) {
+                console.log(lectureResult);
                 connection.release()
                 res.status(200).send({result : 'No content'})
                 return
