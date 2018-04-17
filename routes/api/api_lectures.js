@@ -1824,15 +1824,11 @@ router.post('/create/manager', (req, res, next)=>{
 
 
     // 출석카운트 만들기
-    // tempAttendance='['
     for(var ii=0;   ii<sessionCount;   ii++){
         tempAttendance.push(0)
-        // if(ii != 0)
-        //     tempAttendance+= ','
-        // tempAttendance+= '0'
     }
-    // tempAttendance+=']'
     tempAttendance = JSON.stringify(tempAttendance)
+    tempAttendance = tempAttendance.substring(res.length-1, 1) // 마지막부터 첫번째까지 자르기
 
 
     // 수강생

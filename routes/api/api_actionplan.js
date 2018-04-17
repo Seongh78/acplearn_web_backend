@@ -1,5 +1,5 @@
 /*
-Router : /companies
+Router : /api/plans/
 
 */
 
@@ -24,14 +24,19 @@ Route : "/api/plans/"
 
 API 목록
 
-01. 액션플랜 상세보기
+[액션플랜 상세보기]
 /detail/:lap_idx
 
-02. 강의별 액션플랜
+[진행데이터 - (점수, 피드 등)]
+/score/:lec_idx?_filter=
+
+[강의별 액션플랜]
 /:lec_idx
 
-03. 개별 플랜목록
+[개별 플랜목록]
 /:lec_idx/:stu_idx
+
+
 
 
 */
@@ -41,7 +46,7 @@ API 목록
 
 
 
-// ====== 01. 액션플랜 상세보기 ====== //
+// ====== 액션플랜 상세보기 ====== //
 router.get('/detail/:lap_idx', isAuth, (req,res,next)=>{
     var lap_idx = req.params.lap_idx
 
@@ -97,7 +102,7 @@ router.get('/detail/:lap_idx', isAuth, (req,res,next)=>{
         })// lap - conn
     }) // pool
 })
-// ====== 01. 액션플랜 상세보기 ====== //
+// ====== 액션플랜 상세보기 ====== //
 
 
 
@@ -107,7 +112,154 @@ router.get('/detail/:lap_idx', isAuth, (req,res,next)=>{
 
 
 
-// ====== 02. 강의별 액션플랜 불러오기 ====== //
+
+
+
+// ====== 진행데이터 ====== //
+router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
+    var tutor_idx   = req.user.user.tutor_idx; // 강사아이디
+    var lec_idx      = req.params.lec_idx // 강의아이디
+    var _filter      = req.query._filter // 분류
+    var _value      = req.query._value // 분류
+
+    // 전체 평균 점수데이터
+    var avgAllSQL = `
+        SELECT
+        	date_format(LAD.lad_date , '%Y-%m-%d') as lad_date,
+        	(
+        		SELECT AVG(LAC.lac_score)
+        		FROM lecture_acplearn_check LAC
+        		WHERE LAC.lac_flag='self' AND LAC.lac_date = LAD.lad_date
+        	) as avgSelfScore,
+        	(
+        		SELECT AVG(LAC.lac_score)
+        		FROM lecture_acplearn_check LAC
+        		WHERE LAC.lac_flag='others' AND LAC.lac_date = LAD.lad_date
+        	) as avgOthersScore
+
+        FROM
+        	lecture_session LS,
+        	lecture_acplearn_day LAD
+
+        WHERE
+        	LS.lec_idx = ?  AND
+        	LS.ls_idx = LAD.ls_idx
+
+    	GROUP BY LAD.lad_date `
+
+    // KPI별 통계 -  파라미터 : [ lec_idx , lk_idx , flag ]
+    var kpiSQL  = `
+        SELECT
+            date_format(LAC.lac_date , '%Y-%m-%d') as date,
+            AVG(LAC.lac_score) as score
+
+            FROM
+            	lecture_kpi LK,  	lecture_action_plan LAP, 	lecture_acplearn_check LAC
+
+            WHERE
+            	LK.lec_idx = ?  AND
+            	LK.lk_idx = ?  AND
+
+            	LK.lk_idx = LAP.lk_idx AND
+            	LAP.lap_idx = LAC.lap_idx AND
+            	LAC.lac_flag=?
+
+        	GROUP BY lac_date`
+
+
+    // 최종 실행 쿼리, 파라미터
+    var query='', params=[]
+
+
+    // 점수데이터 - 배열로 표시
+    var selfScore = []
+    var otherScore = []
+    var gapScore = []
+
+
+    switch (_filter) {
+        case 'kpi':
+            query = kpiSQL
+            params = [lec_idx, _value, 'self']
+            break;
+        default:
+            query= avgAllSQL
+            params.push(lec_idx)
+    }
+
+
+    // Connection Pool
+    pool.getConnection((er, connection)=>{
+        if (er) {
+            connection.release()
+            throw er
+            return
+        }// er
+
+
+        connection.query(query, params, (err1, result1)=>{
+            if (err1) {
+                connection.release()
+                console.log(err1);
+                res.send(500, {result: 'error'})
+                return
+            }
+
+            if(_filter === 'kpi'){ // kpi인경우
+                params[params.length-1] = 'others'
+                connection.query(query, params, (err2, result2)=>{
+                    if (err1) {
+                        connection.release()
+                        console.log(err1);
+                        res.send(500, {result: 'error'})
+                        return
+                    }
+
+                    // 응답모델
+                    var score =[]
+                    for(var rid  in  result1){
+                        score.push({
+                            lad_date : result1[rid].date,
+                            avgSelfScore : result1[rid].score,
+                            avgOthersScore : result2[rid].score
+                        })
+                    }// for
+
+                    connection.release()
+                    res.send(200, { score }) // 응답
+                    return
+                })
+
+            }// if
+            else{
+                connection.release()
+                res.send(200, { score: result1 }) // 응답
+            }
+
+        })// 전체 평균점수
+
+    }) // Connection Pool
+
+
+
+})
+// ====== 진행데이터 ====== //
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ====== 강의별 액션플랜 불러오기 ====== //
 router.get('/:lec_idx', isAuth, (req, res, next)=>{
 
     var tutor_idx   = req.user.user.tutor_idx; // 강사아이디
@@ -135,7 +287,7 @@ router.get('/:lec_idx', isAuth, (req, res, next)=>{
         })// connection
     })// pool
 })
-// ====== 02. 강의별 액션플랜 불러오기 ====== //
+// ====== 강의별 액션플랜 불러오기 ====== //
 
 
 
@@ -145,7 +297,7 @@ router.get('/:lec_idx', isAuth, (req, res, next)=>{
 
 
 
-// ====== 03. 개별 플랜목록 ====== //
+// ====== 개별 플랜목록 ====== //
 router.get('/:lec_idx/:stu_idx',  isAuth, (req, res, next)=>{
     var tutor_idx   = req.user.user.tutor_idx; // 강사아이디
     var lec_idx      = req.params.lec_idx // 강의아이디
@@ -185,7 +337,7 @@ router.get('/:lec_idx/:stu_idx',  isAuth, (req, res, next)=>{
         })// connection
     })// pool
 })
-// ====== 03. 개별 플랜목록 ====== //
+// ====== 개별 플랜목록 ====== //
 
 
 
