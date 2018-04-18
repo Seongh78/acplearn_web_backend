@@ -166,6 +166,28 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
 
         	GROUP BY lac_date`
 
+    // 그룹별 통계
+    var groupSQL = `
+    SELECT
+    	date_format(LAD.lad_date , '%Y-%m-%d') as lad_date,
+    	AVG(LAC.lac_score) as avgSelfScore
+
+    FROM
+    	\`group\` G,
+    	registration R,
+    	lecture_acplearn_day LAD
+
+    	LEFT JOIN lecture_acplearn_check LAC
+    	ON LAD.lad_idx = LAC.lad_idx
+
+    WHERE
+    	G.lec_idx = ? AND
+    	G.group_idx=? AND
+    	G.group_idx = R.group_idx AND
+    	R.stu_idx = LAD.stu_idx AND
+    	LAC.lac_flag=?
+
+    	GROUP BY  LAD.lad_date`
 
     // 최종 실행 쿼리, 파라미터
     var query='', params=[]
@@ -180,6 +202,10 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
     switch (_filter) {
         case 'kpi':
             query = kpiSQL
+            params = [lec_idx, _value, 'self']
+            break;
+        case 'group':
+            query = groupSQL
             params = [lec_idx, _value, 'self']
             break;
         default:
@@ -205,11 +231,11 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
                 return
             }
 
-            if(_filter === 'kpi'){ // kpi인경우
+            if(_filter === 'kpi' || _filter === 'group'){ // kpi인경우
                 params[params.length-1] = 'others'
                 connection.query(query, params, (err2, result2)=>{
+                    connection.release()
                     if (err1) {
-                        connection.release()
                         console.log(err1);
                         res.send(500, {result: 'error'})
                         return
@@ -225,9 +251,7 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
                         })
                     }// for
 
-                    connection.release()
                     res.send(200, { score }) // 응답
-                    return
                 })
 
             }// if
