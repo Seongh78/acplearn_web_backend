@@ -125,7 +125,7 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
     // 전체 평균 점수데이터
     var avgAllSQL = `
         SELECT
-        	date_format(LAD.lad_date , '%Y-%m-%d') as lad_date,
+        	date_format(LAD.lad_date , '%m-%d') as lad_date,
         	(
         		SELECT AVG(LAC.lac_score)
         		FROM lecture_acplearn_check LAC
@@ -150,7 +150,7 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
     // KPI별 통계 -  파라미터 : [ lec_idx , lk_idx , flag ]
     var kpiSQL  = `
         SELECT
-            date_format(LAC.lac_date , '%Y-%m-%d') as date,
+            date_format(LAC.lac_date , '%m-%d') as date,
             AVG(LAC.lac_score) as score
 
             FROM
@@ -169,7 +169,7 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
     // 그룹별 통계
     var groupSQL = `
     SELECT
-    	date_format(LAD.lad_date , '%Y-%m-%d') as lad_date,
+    	date_format(LAD.lad_date , '%m-%d') as lad_date,
     	AVG(LAC.lac_score) as avgSelfScore
 
     FROM
@@ -189,6 +189,28 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
 
     	GROUP BY  LAD.lad_date`
 
+
+    // 부서별 통계
+    var departmentSQL = `
+    SELECT
+    	date_format(LAD.lad_date , '%m-%d') as lad_date,
+    	R.stu_department as dep,
+    	AVG(LAC.lac_score) as avgSelfScore
+    FROM
+    	registration R,
+    	lecture_acplearn_day LAD
+
+    	LEFT JOIN lecture_acplearn_check LAC
+    	ON LAD.lad_idx = LAC.lad_idx
+
+    WHERE
+    	R.lec_idx = ? AND
+    	R.stu_department = ? AND
+    	R.stu_idx = LAD.stu_idx AND
+    	LAC.lac_flag=?
+
+    	GROUP BY  LAD.lad_date, R.stu_department`
+
     // 최종 실행 쿼리, 파라미터
     var query='', params=[]
 
@@ -201,12 +223,16 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
 
     switch (_filter) {
         case 'kpi':
-            query = kpiSQL
             params = [lec_idx, _value, 'self']
+            query = kpiSQL
             break;
         case 'group':
-            query = groupSQL
             params = [lec_idx, _value, 'self']
+            query = groupSQL
+            break;
+        case 'department':
+            params = [lec_idx, _value, 'self']
+            query = groupSQL
             break;
         default:
             query= avgAllSQL
@@ -231,7 +257,7 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
                 return
             }
 
-            if(_filter === 'kpi' || _filter === 'group'){ // kpi인경우
+            if(_filter === 'kpi' || _filter === 'group' || _filter==='department'){ // kpi인경우
                 params[params.length-1] = 'others'
                 connection.query(query, params, (err2, result2)=>{
                     connection.release()
@@ -291,16 +317,43 @@ router.get('/:lec_idx', isAuth, (req, res, next)=>{
 
     var sql = `
         SELECT
-            *
+            LAP.lap_idx   as   lap_idx,
+            LAP.lap_text   as   lap_text,
+            LAP.lk_idx   as   lk_idx,
+            LAP.stu_idx   as   stu_idx,
+            LS.ls_idx   as   ls_idx,
+            LS.ls_seq   as   ls_seq,
+            CC2.cc2_name as cc2_name,
+            (
+            	SELECT AVG(LAC.lac_score)
+            	FROM lecture_acplearn_check LAC
+            	WHERE LAC.lap_idx = LAP.lap_idx AND LAC.lac_flag='self'
+            ) as avgSelfScore,
+            (
+            	SELECT AVG(LAC.lac_score)
+            	FROM lecture_acplearn_check LAC
+            	WHERE LAC.lap_idx = LAP.lap_idx AND LAC.lac_flag='others'
+            ) as avgSelfScore
         FROM
-            lecture_action_plan LAP, lecture_session LS
+            lecture_action_plan LAP,
+            lecture_session LS,
+           	lecture_kpi LK,
+           	capability_category2 CC2
         WHERE
-            LS.lec_idx=? and LAP.ls_idx=LS.ls_idx
+	        LS.lec_idx = ?  AND
+	        LAP.ls_idx = LS.ls_idx  AND
+	        LAP.lk_idx = LK.lk_idx  AND
+	        LK.cc2_idx = CC2.cc2_idx
         `
 
 
     pool.getConnection((er, connection)=>{
-        connection.query(sql, (err, result)=>{
+        if (er) {
+            connection.release()
+            throw er
+            return
+        }
+        connection.query(sql, [lec_idx], (err, result)=>{
             connection.release()
             if (err) {
                 console.log(err);

@@ -14,7 +14,7 @@ var fileUpload = require('express-fileupload');
 
 
 
-conn.connect()
+// conn.connect()
 
 
 
@@ -130,9 +130,9 @@ router.get('/detail/:id', (req, res, next)=>{
 
     // 쿼리
     var q={
-        group           : "SELECT * FROM `group` WHERE lec_idx=? ORDER BY group_idx ASC",
+        group : "SELECT * FROM `group` WHERE lec_idx=? ORDER BY group_idx ASC",
 
-        students       : `
+        students : `
         SELECT *
         FROM
             company C ,
@@ -140,7 +140,7 @@ router.get('/detail/:id', (req, res, next)=>{
         WHERE
         R.lec_idx=? and R.com_code=C.com_code`,
 
-        companies   : `
+        companies : `
         SELECT *
         FROM
             company_manager CM,
@@ -148,7 +148,23 @@ router.get('/detail/:id', (req, res, next)=>{
         WHERE
             CM.lec_idx=? and CM.com_code=C.com_code`,
 
-        kpi                : `
+        departments: `
+        SELECT
+            R.stu_department
+        FROM
+            registration R
+        WHERE
+            R.lec_idx = ? GROUP BY R.stu_department`,
+
+        position: `
+        SELECT
+            stu_position
+        FROM
+            registration
+        WHERE
+            lec_idx = ? GROUP BY stu_position`,
+
+        kpi : `
         SELECT
             LK.lk_idx,
             CC2.cc2_idx,
@@ -162,8 +178,8 @@ router.get('/detail/:id', (req, res, next)=>{
         lecture      : `
         SELECT
         	L.lec_idx 			          as 	 lec_idx,
-        	L.lec_startDate 	      as 	 lec_startDate,
-        	L.lec_endDate		     as 	lec_endDate,
+        	date_format(L.lec_startDate, '%Y년 %m월 %d일')  as  lec_startDate,
+        	date_format(L.lec_endDate, '%Y년 %m월 %d일')  as 	lec_endDate,
         	L.lec_title 		           as 	  lec_title,
         	L.lec_personnel 	     as 	lec_personnel,
         	L.lec_target		        as 	   lec_target,
@@ -418,7 +434,6 @@ router.get('/detail/:id', (req, res, next)=>{
                     return res.status(500).send({result : 'kpiErr'})
                 }
 
-                // console.log(kpiResult);
 
                 // 참여기업
                 connection.query(q.companies, [lec_idx], (companiesErr, companiesResult)=>{
@@ -428,34 +443,56 @@ router.get('/detail/:id', (req, res, next)=>{
                         return res.status(500).send({result : 'companiesErr'})
                     }
 
-                    // 그룹
-                    connection.query(q.group, [lec_idx], (groupErr, groupResult)=>{
-                        if(groupErr){ // Error
+                    // 수강생의 부서찾기
+                    connection.query(q.departments, [lec_idx], (departmentsErr, departmentsResult)=>{
+                        if(departmentsErr){ // Error
                             connection.release()
-                            console.log(groupErr);
-                            return res.status(500).send({result : 'groupErr'})
+                            console.log(departmentsErr);
+                            return res.status(500).send({result : 'departmentsErr'})
                         }
 
-                        // 수강생
-                        connection.query(q.students, [lec_idx], (studentsErr, studentsResult)=>{
-                            if(studentsErr){ // Error
+
+                    // 직급
+                    connection.query(q.position, [lec_idx], (positionErr, positionResult)=>{
+                        if(positionErr){ // Error
+                            connection.release()
+                            console.log(positionErr);
+                            return res.status(500).send({result : 'positionErr'})
+                        }
+
+
+                        // 그룹
+                        connection.query(q.group, [lec_idx], (groupErr, groupResult)=>{
+                            if(groupErr){ // Error
                                 connection.release()
-                                console.log(studentsErr);
-                                return res.status(500).send({result : 'studentsErr'})
+                                console.log(groupErr);
+                                return res.status(500).send({result : 'groupErr'})
                             }
 
-                            connection.release()
-                            res.send(200, {
-                                result               :'success',
-                                lecture             : lecture,
-                                companies      : companiesResult,
-                                groups            : groupResult,
-                                students         : studentsResult,
-                                kpi                  : kpiResult
-                            })// send
+                            // 수강생
+                            connection.query(q.students, [lec_idx], (studentsErr, studentsResult)=>{
+                                if(studentsErr){ // Error
+                                    connection.release()
+                                    console.log(studentsErr);
+                                    return res.status(500).send({result : 'studentsErr'})
+                                }
 
-                        })// 수강생
-                    })// 그룹
+                                connection.release()
+                                res.send(200, {
+                                    result               :'success',
+                                    lecture             : lecture,
+                                    companies      : companiesResult,
+                                    departments   : departmentsResult,
+                                    position           : positionResult,
+                                    groups            : groupResult,
+                                    students         : studentsResult,
+                                    kpi                  : kpiResult
+                                })// send
+
+                            })// 수강생
+                        })// 그룹
+                    })// 직급
+                    })// 수강생의 부서찾기
                 })// 참여기업
             })// KPI쿼리
 
@@ -492,6 +529,7 @@ router.get('/dt/:id', (req, res, next)=>{
     // 쿼리
     var q={
         group           : "SELECT * FROM `group` WHERE lec_idx=? ORDER BY group_idx ASC",
+
         students       : `SELECT * FROM company C , registration R  WHERE R.lec_idx=? and R.com_code=C.com_code`,
         companies   : 'SELECT * FROM company_manager CM, company C WHERE CM.lec_idx=? and CM.com_code=C.com_code',
         kpi                : ` SELECT       CC2.cc2_idx, CC2.cc2_name
@@ -660,7 +698,7 @@ router.get('/dt/:id', (req, res, next)=>{
                     lm_text                : lectureResult[ii].lm_text,
                     lm_type               : lectureResult[ii].lm_type
                 }
-                console.log(tempModules);
+                // console.log(tempModules);
 
 
                  // 세션모델
@@ -709,7 +747,7 @@ router.get('/dt/:id', (req, res, next)=>{
 
                             // 시간표모델
                             if( lectureResult[ii].lt_idx != null ){ // Null이 아닌경우
-                                console.log(" lectureResult[ii].lt_idx : ", lectureResult[ii].lt_idx);
+                                // console.log(" lectureResult[ii].lt_idx : ", lectureResult[ii].lt_idx);
                                 //전 아이디와 다를경우 푸시
                                 if( lectureResult[ii].lt_idx != lectureResult[ii-1].lt_idx ){
                                     sessions[sessionCount].sessionClass[sessionClassCount].timetables.push(tempTimetables)
@@ -744,46 +782,55 @@ router.get('/dt/:id', (req, res, next)=>{
                     return res.status(500).send({result : 'kpiErr'})
                 }
 
-                // console.log(kpiResult);
-
-                // 참여기업
-                connection.query(q.companies, [lec_idx], (companiesErr, companiesResult)=>{
-                    if(companiesErr){ // Error
+                // 수강생의 부서찾기
+                connection.query(q.departments, [lec_idx], (departmentsErr, departmentsResult)=>{
+                    if(departmentsErr){ // Error
                         connection.release()
-                        console.log(companiesErr);
-                        return res.status(500).send({result : 'companiesErr'})
+                        console.log(departmentsErr);
+                        return res.status(500).send({result : 'departmentsErr'})
                     }
+                    // console.log(departmentsResult);
 
-                    // 그룹
-                    connection.query(q.group, [lec_idx], (groupErr, groupResult)=>{
-                        if(groupErr){ // Error
+                    // 참여기업
+                    connection.query(q.companies, [lec_idx], (companiesErr, companiesResult)=>{
+                        if(companiesErr){ // Error
                             connection.release()
-                            console.log(groupErr);
-                            return res.status(500).send({result : 'groupErr'})
+                            console.log(companiesErr);
+                            return res.status(500).send({result : 'companiesErr'})
                         }
 
-                        // 수강생
-                        connection.query(q.students, [lec_idx], (studentsErr, studentsResult)=>{
-                            if(studentsErr){ // Error
+                        // 그룹
+                        connection.query(q.group, [lec_idx], (groupErr, groupResult)=>{
+                            if(groupErr){ // Error
                                 connection.release()
-                                console.log(studentsErr);
-                                return res.status(500).send({result : 'studentsErr'})
+                                console.log(groupErr);
+                                return res.status(500).send({result : 'groupErr'})
                             }
 
-                            connection.release()
-                            lecture.sessions = sessions
-                            res.send(200, {
-                                result               :'success',
-                                lecture             : lecture,
-                                companies      : companiesResult,
-                                groups            : groupResult,
-                                students         : studentsResult,
-                                kpi                  : kpiResult
-                            })// send
+                            // 수강생
+                            connection.query(q.students, [lec_idx], (studentsErr, studentsResult)=>{
+                                if(studentsErr){ // Error
+                                    connection.release()
+                                    console.log(studentsErr);
+                                    return res.status(500).send({result : 'studentsErr'})
+                                }
 
-                        })// 수강생
-                    })// 그룹
-                })// 참여기업
+                                connection.release()
+                                lecture.sessions = sessions
+                                res.send(200, {
+                                    result               :'success',
+                                    lecture             : lecture,
+                                    companies      : companiesResult,
+                                    departments   : departmentsResult,
+                                    groups            : groupResult,
+                                    students         : studentsResult,
+                                    kpi                  : kpiResult
+                                })// send
+
+                            })// 수강생
+                        })// 그룹
+                    })// 참여기업
+                })// 수강생의 부서찾기
             })// KPI쿼리
 
 
@@ -1329,7 +1376,7 @@ router.post('/create/sessions', (req, res, next)=>{
                                     for(var kk  in  sessions[ii].sessionClass[jj].timetables){
 
                                             for(var ll  in  sessions[ii].sessionClass[jj].timetables[kk].modules){
-                                                console.log("RStimetableInsert : ", RStimetableInsert.insertId);
+                                                // console.log("RStimetableInsert : ", RStimetableInsert.insertId);
                                                 tempModules.push([
                                                     sessions[ii].sessionClass[jj].timetables[kk].modules[ll].lm_type,
                                                     sessions[ii].sessionClass[jj].timetables[kk].modules[ll].lm_title,
@@ -1827,8 +1874,8 @@ router.post('/create/manager', (req, res, next)=>{
     for(var ii=0;   ii<sessionCount;   ii++){
         tempAttendance.push(0)
     }
-    tempAttendance = JSON.stringify(tempAttendance)
-    tempAttendance = tempAttendance.substring(res.length-1, 1) // 마지막부터 첫번째까지 자르기
+    tempAttendance = String(tempAttendance)
+
 
 
     // 수강생

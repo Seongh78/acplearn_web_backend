@@ -121,5 +121,47 @@ router.put('/score', (req, res, next)=>{
 
 
 
+// ====== 수강생의  - 부서찾기 ====== //
+router.get('/departments/:lec_idx', (req, res, next)=>{
+
+    var sql = `
+    SELECT
+        R.stu_department
+    FROM
+        registration R
+    WHERE
+        R.lec_idx = ? GROUP BY R.stu_department`
+
+    pool.getConnection((er, connection)=>{
+        if (er) {
+            connection.release()
+            throw er
+            return
+        }
+
+        connection.query(sql, [14], (err, departmentsResult)=>{
+            connection.release()
+            if (err) {
+                console.log(err);
+                res.send(500, {result:err})
+                return
+            }
+
+            res.send(200 , { departments : departmentsResult })
+        }) // connection
+    }) // pool
+
+})
+// ====== 수강생의  - 부서찾기 ====== //
+
+
+
+
+
+
+
+
+
+
 
 module.exports = router;
