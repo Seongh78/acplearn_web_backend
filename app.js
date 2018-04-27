@@ -62,7 +62,7 @@ app.use(cors({
         'http://localhost:8081',
         'http://localhost:3333',
         'http://www.actiongo.co.kr/',
-        'http://www.actiongo.co.kr/login',
+        'http://www.actiongo.co.kr/login'
     ],
     methods:["GET","POST","PUT", "DELETE"], // 허용 메소드
     credentials: true // enable set cookie

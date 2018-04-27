@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var passport = require('passport');
-var request = require('request');
+// var request = require('request');
 
 var LocalStrategy = require('passport-local').Strategy;
 var conn = require('../common/dbconn').connection;
