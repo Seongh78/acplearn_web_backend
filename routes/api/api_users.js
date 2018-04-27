@@ -204,13 +204,13 @@ router.get('/login/naver', passport.authenticate('naver', {
 
 
 
-// 자동로그인
-router.get('/autologin', (req,res,next)=>{
-    request.post('http://localhost:3000/api/users/login', {id:'admin',pw:'123123'}, ()=>{
-        res.send(200, {a:1})
-    })
-
-});
+// // 자동로그인
+// router.get('/autologin', (req,res,next)=>{
+//     request.post('http://localhost:3000/api/users/login', {id:'admin',pw:'123123'}, ()=>{
+//         res.send(200, {a:1})
+//     })
+//
+// });
 
 
 
