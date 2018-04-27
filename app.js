@@ -61,6 +61,7 @@ app.use(cors({
         'http://localhost:8080',
         'http://localhost:8081',
         'http://localhost:3333',
+        'http://www.actiongo.co.kr',
         'http://www.actiongo.co.kr/',
         'http://www.actiongo.co.kr/login'
     ],
