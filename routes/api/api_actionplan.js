@@ -24,17 +24,6 @@ Route : "/api/plans/"
 
 API 목록
 
-[액션플랜 상세보기]
-/detail/:lap_idx
-
-[진행데이터 - (점수, 피드 등)]
-/score/:lec_idx?_filter=
-
-[강의별 액션플랜]
-/:lec_idx
-
-[개별 플랜목록]
-/:lec_idx/:stu_idx
 
 
 
@@ -46,33 +35,32 @@ API 목록
 
 
 
-// ====== 액션플랜 상세보기 ====== //
+// ====== 액션플랜 상세보기 ====== // => O
 router.get('/detail/:lap_idx', isAuth, (req,res,next)=>{
     var lap_idx = req.params.lap_idx
 
     // 액션플랜 상세보기 - lap_grader : 평가인원
     var sql = `
-    SELECT *
-    FROM lecture_action_plan LAP
+        SELECT *
+        FROM lecture_action_plan LAP
 
-   	LEFT JOIN lecture_kpi LK
-	ON LAP.lk_idx=LK.lk_idx
+       	LEFT JOIN lecture_kpi LK
+    	ON LAP.lk_idx=LK.lk_idx
 
-	LEFT JOIN capability_category2 CC2
-	ON LK.cc2_idx=CC2.cc2_idx
+    	LEFT JOIN capability_category2 CC2
+    	ON LK.cc2_idx=CC2.cc2_idx
 
-	WHERE LAP.lap_idx=?
-    `
-    var lacSQL = `
-    SELECT
-        LAC.lac_score,
-        LAC.lac_flag,
-        LAC.lac_date
-    FROM
-        lecture_acplearn_check LAC
-    WHERE
-        LAC.lap_idx = ?
-    `
+    	WHERE LAP.lap_idx=?
+        `
+        var lacSQL = `
+        SELECT
+            LAC.lac_score,
+            LAC.lac_flag,
+            LAC.lac_date
+        FROM
+            lecture_acplearn_check LAC
+        WHERE
+            LAC.lap_idx = ?  `
 
     pool.getConnection((er, connection)=>{
         connection.query(sql, [lap_idx], (sqlErr, sqlResult)=>{
@@ -115,72 +103,134 @@ router.get('/detail/:lap_idx', isAuth, (req,res,next)=>{
 
 
 
-// ====== 부서별 ====== //
-router.get('/score/departments/:lec_idx/:value', (req, res, next)=>{
+
+
+
+
+// ====== 그룹/부서/직급/성 별 ====== // => O
+router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
     var tutor_idx   = req.user.user.tutor_idx; // 강사아이디
     var lec_idx      = req.params.lec_idx // 강의아이디
+    var classification = req.params.classification // 분류 => 부서/직급
     var value         = req.params.value // 찾을값
+    var temp = ''
 
 
+    switch (classification) {
+        case 'personal': // 개인별 데이터 - 개인별 조회시 그룹바이 필요
+            temp  =  `
+            R.stu_idx=?
+            GROUP BY LAP.lap_idx`
+        break;
+        case 'group': // 부서별 데이터
+            temp =  'R.group_idx=?'
+        break;
+        case 'departments': // 부서별 데이터
+            temp =  'R.stu_department=?'
+        break;
+        case 'position': // 직급별 데이터
+            temp =  'R.stu_position=?'
+        break;
+        case 'gender': // 직급별 데이터
+            temp =  'R.stu_gender=?'
+        break;
+        default: // 컨텐츠 없음 - 요청에러
+            res.send(204, {result: 'success - no contents'})
+            return
+        break;
+    }// switch
+
+
+    // 분류별 통계
     var sql =  `
         SELECT
-        	DATE_FORMAT(LAD1.lad_date, '%m-%d') as lad_date ,
-            (
+        	DATE_FORMAT(LAD.lad_date, '%m/%d') as lad_date,
+        	(
         		SELECT
         			AVG(LAC.lac_score)
-
         		FROM
-        			lecture_acplearn_check LAC,
+        			registration R,
         			lecture_action_plan LAP,
-        			lecture_session LS,
-        			lecture_acplearn_day LAD,
-        			registration R
-
+        			lecture_acplearn_check LAC
         		WHERE
-        			LS.lec_idx = LS1.lec_idx AND
-        			LS.lec_idx = R.lec_idx AND
-        			LS.ls_idx = LAD.ls_idx AND
-        			R.stu_idx = LAD.stu_idx AND
-        			R.stu_department = ? AND
-        			LAD.lad_idx = LAC.lad_idx AND
-        			LAP.lap_idx = LAC.lap_idx AND
-        			LAC.lac_date=LAD1.lad_date AND
-        			LAC.lac_flag = 'self'
+        			R.lec_idx = LS.lec_idx
+        			AND R.stu_idx = LAP.stu_idx
+        			AND LAP.lap_idx = LAC.lap_idx
+        			AND LAC.lac_date = LAD.lad_date
+        			AND LAC.lac_flag = 'self'
+                    AND `+temp+`
         	) as avgSelfScore,
         	(
         		SELECT
         			AVG(LAC.lac_score)
-
         		FROM
-        			lecture_acplearn_check LAC,
+        			registration R,
         			lecture_action_plan LAP,
-        			lecture_session LS,
-        			lecture_acplearn_day LAD,
-        			registration R
-
+        			lecture_acplearn_check LAC
         		WHERE
-        			LS.lec_idx = LS1.lec_idx AND
-        			LS.lec_idx = R.lec_idx AND
-        			LS.ls_idx = LAD.ls_idx AND
-        			R.stu_idx = LAD.stu_idx AND
-        			R.stu_department = ? AND
-        			LAD.lad_idx = LAC.lad_idx AND
-        			LAP.lap_idx = LAC.lap_idx AND
-        			LAC.lac_date=LAD1.lad_date AND
-        			LAC.lac_flag = 'others'
+        			R.lec_idx = LS.lec_idx
+        			AND R.stu_idx = LAP.stu_idx
+        			AND LAP.lap_idx = LAC.lap_idx
+        			AND LAC.lac_date = LAD.lad_date
+        			AND LAC.lac_flag = 'others'
+                    AND `+temp+`
         	) as avgOthersScore
 
         FROM
-        	lecture_session LS1,
-        	lecture_acplearn_day LAD1
+        	lecture_session LS,
+        	lecture_acplearn_day LAD
 
         WHERE
-        	LS1.lec_idx = ? AND
-        	LS1.ls_idx = LAD1.ls_idx
+        	LS.lec_idx = ?
+        	AND LS.ls_idx = LAD.ls_idx
 
-        GROUP BY LAD1.lad_date
-    `
+        GROUP BY lad_date `
 
+    // KPI별 통계
+    var kpiAvgSQL = `
+        SELECT
+        	CC2.cc2_idx as cc2_idx ,
+        	CC2.cc2_name as cc2_name,
+        	LK.lk_idx as lk_idx,
+        	(
+        		SELECT
+        			AVG(LAC.lac_score)
+        		FROM
+        			registration R,
+        			lecture_action_plan LAP,
+        			lecture_acplearn_check LAC
+        		WHERE
+        			LAP.stu_idx = R.stu_idx
+        			AND LK.lk_idx = LAP.lk_idx
+        			AND LAP.lap_idx = LAC.lap_idx
+        			AND LAC.lac_flag = 'self'
+                    AND  `+temp+`
+        	) as avgSelfScore,
+        	(
+        		SELECT
+        			AVG(LAC.lac_score)
+        		FROM
+        			registration R,
+        			lecture_action_plan LAP,
+        			lecture_acplearn_check LAC
+        		WHERE
+        			LAP.stu_idx = R.stu_idx
+        			AND LK.lk_idx = LAP.lk_idx
+        			AND LAP.lap_idx = LAC.lap_idx
+        			AND LAC.lac_flag = 'others'
+                    AND  `+temp+`
+        	) as avgOthersScore
+
+        FROM
+        	capability_category2 CC2,
+        	lecture_kpi LK
+
+        WHERE
+        	LK.lec_idx = ?
+        	AND CC2.cc2_idx = LK.cc2_idx`
+
+
+    // Pool
     pool.getConnection((er,connection)=>{
         if (er) {
             connection.release()
@@ -188,19 +238,36 @@ router.get('/score/departments/:lec_idx/:value', (req, res, next)=>{
             return
         }
 
+        // 부서/직급 별 액플런 찾기
         connection.query(sql, [value, value, lec_idx], (err , departmentsResult)=>{
-            connection.release()
             if (err) {
+                connection.release()
                 console.log(err);
                 res.send(500, {reuslt:err})
                 return
             }
-            res.send(200 , { score:departmentsResult })
-        })
+
+            // KPI별 통계
+            connection.query(kpiAvgSQL, [value, value, lec_idx], (kpiAvgErr, kpiAvgResult)=>{
+                if (kpiAvgErr) {
+                    connection.release()
+                    console.log(kpiAvgErr);
+                    res.send(500, {reuslt:kpiAvgErr})
+                    return
+                }
+
+                connection.release()
+                res.send(200 , {
+                    kpiAvg : kpiAvgResult,
+                    score : departmentsResult
+                })
+
+            }) // KPI별 통계
+        })// 부서/직급 별 액플런 찾기
     })// pool
 
 })
-// ====== 부서별 ====== //
+// ====== 그룹/부서/직급/성 별 ====== //
 
 
 
@@ -211,92 +278,6 @@ router.get('/score/departments/:lec_idx/:value', (req, res, next)=>{
 
 
 
-// ====== 직급별 ====== //
-router.get('/score/position/:lec_idx/:value', (req, res, next)=>{
-    var tutor_idx   = req.user.user.tutor_idx; // 강사아이디
-    var lec_idx      = req.params.lec_idx // 강의아이디
-    var value         = req.params.value // 찾을값
-
-
-    var sql =  `
-        SELECT
-        	DATE_FORMAT(LAD1.lad_date, '%m-%d') as lad_date ,
-            (
-        		SELECT
-        			AVG(LAC.lac_score)
-
-        		FROM
-        			lecture_acplearn_check LAC,
-        			lecture_action_plan LAP,
-        			lecture_session LS,
-        			lecture_acplearn_day LAD,
-        			registration R
-
-        		WHERE
-        			LS.lec_idx = LS1.lec_idx AND
-        			LS.lec_idx = R.lec_idx AND
-        			LS.ls_idx = LAD.ls_idx AND
-        			R.stu_idx = LAD.stu_idx AND
-        			R.stu_position = ? AND
-        			LAD.lad_idx = LAC.lad_idx AND
-        			LAP.lap_idx = LAC.lap_idx AND
-        			LAC.lac_date=LAD1.lad_date AND
-        			LAC.lac_flag = 'self'
-        	) as avgSelfScore,
-        	(
-        		SELECT
-        			AVG(LAC.lac_score)
-
-        		FROM
-        			lecture_acplearn_check LAC,
-        			lecture_action_plan LAP,
-        			lecture_session LS,
-        			lecture_acplearn_day LAD,
-        			registration R
-
-        		WHERE
-        			LS.lec_idx = LS1.lec_idx AND
-        			LS.lec_idx = R.lec_idx AND
-        			LS.ls_idx = LAD.ls_idx AND
-        			R.stu_idx = LAD.stu_idx AND
-        			R.stu_position = ? AND
-        			LAD.lad_idx = LAC.lad_idx AND
-        			LAP.lap_idx = LAC.lap_idx AND
-        			LAC.lac_date=LAD1.lad_date AND
-        			LAC.lac_flag = 'others'
-        	) as avgOthersScore
-
-        FROM
-        	lecture_session LS1,
-        	lecture_acplearn_day LAD1
-
-        WHERE
-        	LS1.lec_idx = ? AND
-        	LS1.ls_idx = LAD1.ls_idx
-
-        GROUP BY LAD1.lad_date
-    `
-
-    pool.getConnection((er,connection)=>{
-        if (er) {
-            connection.release()
-            throw er
-            return
-        }
-
-        connection.query(sql, [value, value, lec_idx], (err , departmentsResult)=>{
-            connection.release()
-            if (err) {
-                console.log(err);
-                res.send(500, {reuslt:err})
-                return
-            }
-            res.send(200 , { score:departmentsResult })
-        })
-    })// pool
-
-})
-// ====== 직급별 ====== //
 
 
 
@@ -317,18 +298,36 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
     var _value      = req.query._value // 분류
 
     // 전체 평균 점수데이터
-    var avgAllSQL = `
+    var sql = `
         SELECT
-        	date_format(LAD.lad_date , '%m-%d') as lad_date,
+        	DATE_FORMAT(LAD.lad_date, '%m/%d') as lad_date,
         	(
-        		SELECT AVG(LAC.lac_score)
-        		FROM lecture_acplearn_check LAC
-        		WHERE LAC.lac_flag='self' AND LAC.lac_date = LAD.lad_date
+        		SELECT
+        			AVG(LAC.lac_score)
+        		FROM
+        			registration R,
+        			lecture_action_plan LAP,
+        			lecture_acplearn_check LAC
+        		WHERE
+        			R.lec_idx = LS.lec_idx
+        			AND R.stu_idx = LAP.stu_idx
+        			AND LAP.lap_idx = LAC.lap_idx
+        			AND LAC.lac_date = LAD.lad_date
+        			AND LAC.lac_flag = 'self'
         	) as avgSelfScore,
         	(
-        		SELECT AVG(LAC.lac_score)
-        		FROM lecture_acplearn_check LAC
-        		WHERE LAC.lac_flag='others' AND LAC.lac_date = LAD.lad_date
+        		SELECT
+        			AVG(LAC.lac_score)
+        		FROM
+        			registration R,
+        			lecture_action_plan LAP,
+        			lecture_acplearn_check LAC
+        		WHERE
+        			R.lec_idx = LS.lec_idx
+        			AND R.stu_idx = LAP.stu_idx
+        			AND LAP.lap_idx = LAC.lap_idx
+        			AND LAC.lac_date = LAD.lad_date
+        			AND LAC.lac_flag = 'others'
         	) as avgOthersScore
 
         FROM
@@ -336,177 +335,380 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
         	lecture_acplearn_day LAD
 
         WHERE
-        	LS.lec_idx = ?  AND
-        	LS.ls_idx = LAD.ls_idx
+        	LS.lec_idx = ?
+        	AND LS.ls_idx = LAD.ls_idx
 
-    	GROUP BY LAD.lad_date `
+        GROUP BY lad_date`
 
-    // KPI별 통계 -  파라미터 : [ lec_idx , lk_idx , flag ]
-    var kpiSQL  = `
+    // KPI별 통계
+    var kpiAvgSQL = `
         SELECT
-            date_format(LAC.lac_date , '%m-%d') as date,
-            AVG(LAC.lac_score) as score
+        	CC2.cc2_idx as cc2_idx ,
+        	CC2.cc2_name as cc2_name,
+        	LK.lk_idx as lk_idx,
+        	(
+        		SELECT
+        			AVG(LAC.lac_score)
+        		FROM
+        			registration R,
+        			lecture_action_plan LAP,
+        			lecture_acplearn_check LAC
+        		WHERE
+        			LAP.stu_idx = R.stu_idx
+        			AND LK.lk_idx = LAP.lk_idx
+        			AND LAP.lap_idx = LAC.lap_idx
+        			AND LAC.lac_flag = 'self'
+        	) as avgSelfScore,
+        	(
+        		SELECT
+        			AVG(LAC.lac_score)
+        		FROM
+        			registration R,
+        			lecture_action_plan LAP,
+        			lecture_acplearn_check LAC
+        		WHERE
+        			LAP.stu_idx = R.stu_idx
+        			AND LK.lk_idx = LAP.lk_idx
+        			AND LAP.lap_idx = LAC.lap_idx
+        			AND LAC.lac_flag = 'others'
+        	) as avgOthersScore
 
-            FROM
-            	lecture_kpi LK,  	lecture_action_plan LAP, 	lecture_acplearn_check LAC
+        FROM
+        	capability_category2 CC2,
+        	lecture_kpi LK
 
-            WHERE
-            	LK.lec_idx = ?  AND
-            	LK.lk_idx = ?  AND
-
-            	LK.lk_idx = LAP.lk_idx AND
-            	LAP.lap_idx = LAC.lap_idx AND
-            	LAC.lac_flag=?
-
-        	GROUP BY lac_date`
-
-    // 그룹별 통계
-    var groupSQL = `
-    SELECT
-    	date_format(LAD.lad_date , '%m-%d') as lad_date,
-    	AVG(LAC.lac_score) as avgSelfScore
-
-    FROM
-    	\`group\` G,
-    	registration R,
-    	lecture_acplearn_day LAD
-
-    	LEFT JOIN lecture_acplearn_check LAC
-    	ON LAD.lad_idx = LAC.lad_idx
-
-    WHERE
-    	G.lec_idx = ? AND
-    	G.group_idx=? AND
-    	G.group_idx = R.group_idx AND
-    	R.stu_idx = LAD.stu_idx AND
-    	LAC.lac_flag=?
-
-    	GROUP BY  LAD.lad_date`
-
-
-    // 부서별 통계
-    var departmentSQL = `
-    SELECT
-    	DATE_FORMAT(LAD1.lad_date, '%m-%d') as lad_date ,
-    	(
-    		SELECT
-    			AVG(LAC.lac_score)
-
-    		FROM
-    			lecture_acplearn_check LAC,
-    			lecture_action_plan LAP,
-    			lecture_session LS,
-    			lecture_acplearn_day LAD,
-    			registration R
-
-    		WHERE
-    			LS.lec_idx = LS1.lec_idx AND
-    			LS.lec_idx = R.lec_idx AND
-    			LS.ls_idx = LAD.ls_idx AND
-    			R.stu_idx = LAD.stu_idx AND
-    			R.stu_position = '사원' AND
-    			LAD.lad_idx = LAC.lad_idx AND
-    			LAP.lap_idx = LAC.lap_idx AND
-    			LAC.lac_date=LAD1.lad_date AND
-    			LAC.lac_flag = 'self'
-    	) as avgOthersScore
-
-    FROM
-    	lecture_session LS1,
-    	lecture_acplearn_day LAD1
-
-    WHERE
-    	LS1.lec_idx = 18 AND
-    	LS1.ls_idx = LAD1.ls_idx
-
-    GROUP BY LAD1.lad_date
-`
-
-    // 최종 실행 쿼리, 파라미터
-    var query='', params=[]
+        WHERE
+        	LK.lec_idx = ?
+        	AND CC2.cc2_idx = LK.cc2_idx  `
 
 
-    // 점수데이터 - 배열로 표시
-    var selfScore = []
-    var otherScore = []
-    var gapScore = []
-
-
-    switch (_filter) {
-        case 'kpi':
-            params = [lec_idx, _value, 'self']
-            query = kpiSQL
-            break;
-        case 'group':
-            params = [lec_idx, _value, 'self']
-            query = groupSQL
-            break;
-        case 'department':
-            params = [lec_idx, _value, 'self']
-            query = groupSQL
-            break;
-        default:
-            query= avgAllSQL
-            params.push(lec_idx)
-    }
-
-
-    // Connection Pool
-    pool.getConnection((er, connection)=>{
+    // Pool
+    pool.getConnection((er,connection)=>{
         if (er) {
             connection.release()
             throw er
             return
-        }// er
+        }
 
-
-        connection.query(query, params, (err1, result1)=>{
-            if (err1) {
+        // 부서/직급 별 액플런 찾기
+        connection.query(sql, [lec_idx], (err , departmentsResult)=>{
+            if (err) {
                 connection.release()
-                console.log(err1);
-                res.send(500, {result: 'error'})
+                console.log(err);
+                res.send(500, {reuslt:err})
                 return
             }
 
-            if(_filter === 'kpi' || _filter === 'group' || _filter==='department'){ // kpi인경우
-                params[params.length-1] = 'others'
-                connection.query(query, params, (err2, result2)=>{
+            // KPI별 통계
+            connection.query(kpiAvgSQL, [lec_idx], (kpiAvgErr, kpiAvgResult)=>{
+                if (kpiAvgErr) {
                     connection.release()
-                    if (err1) {
-                        console.log(err1);
-                        res.send(500, {result: 'error'})
-                        return
-                    }
+                    console.log(kpiAvgErr);
+                    res.send(500, {reuslt:kpiAvgErr})
+                    return
+                }
 
-                    // 응답모델
-                    var score =[]
-                    for(var rid  in  result1){
-                        score.push({
-                            lad_date : result1[rid].date,
-                            avgSelfScore : result1[rid].score,
-                            avgOthersScore : result2[rid].score
-                        })
-                    }// for
-
-                    res.send(200, { score }) // 응답
+                connection.release()
+                res.send(200 , {
+                    kpiAvg : kpiAvgResult,
+                    score : departmentsResult
                 })
 
-            }// if
-            else{
-                connection.release()
-                res.send(200, { score: result1 }) // 응답
-            }
+                // res.send(200, { score }) // 응답
 
-        })// 전체 평균점수
-
-    }) // Connection Pool
-
+            }) // KPI별 통계
+        })// 부서/직급 별 액플런 찾기
+    })// pool
 
 
 })
 // ====== 진행데이터 ====== //
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ====== 개별 통계 데이터 ====== //
+router.get('/personal/:lec_idx/:stu_idx', (req, res, next)=>{
+    var lec_idx = req.params.lec_idx // 강의아이디
+    var stu_idx = req.params.stu_idx // 수강생 아이디
+
+    // 누적평균
+    var kpiAvgSQL = `
+        SELECT
+        	CC2.cc2_idx as cc2_idx ,
+        	CC2.cc2_name as cc2_name,
+        	LK.lk_idx as lk_idx,
+        	(
+        		SELECT AVG(LAC.lac_score)
+        		FROM
+        			lecture_action_plan LAP,
+        			lecture_acplearn_check LAC
+
+        		WHERE
+                    LAP.stu_idx = ?
+        			AND LK.lk_idx = LAP.lk_idx
+        			AND LAP.lap_idx = LAC.lap_idx
+        			AND LAC.lac_flag = 'self'
+        	) as avgSelfScore,
+        	(
+        		SELECT AVG(LAC.lac_score)
+        		FROM
+        			lecture_action_plan LAP,
+        			lecture_acplearn_check LAC
+
+        		WHERE
+                    LAP.stu_idx = ?
+        			AND LK.lk_idx = LAP.lk_idx
+        			AND LAP.lap_idx = LAC.lap_idx
+        			AND LAC.lac_flag = 'others'
+        	) as avgOthersScore
+
+        FROM
+        	capability_category2 CC2,
+        	lecture_kpi LK
+
+        WHERE
+        	LK.lec_idx = ?
+        	AND CC2.cc2_idx = LK.cc2_idx  `
+
+    // 개인 전체플랜 평균점수
+    var studentAvgSQL = `
+        SELECT
+        	DATE_FORMAT(LAD.lad_date, '%m/%d') as lad_date,
+        	(
+        		SELECT
+        			AVG(LAC.lac_score)
+        		FROM
+        			registration R,
+        			lecture_action_plan LAP,
+        			lecture_acplearn_check LAC
+        		WHERE
+        			R.lec_idx = LS.lec_idx
+        			AND R.stu_idx = LAP.stu_idx
+        			AND LAP.lap_idx = LAC.lap_idx
+        			AND LAC.lac_date = LAD.lad_date
+        			AND LAC.lac_flag = 'self'
+        			AND R.stu_idx=LAD.stu_idx
+        	) as avgSelfScore,
+        	(
+        		SELECT
+        			AVG(LAC.lac_score)
+        		FROM
+        			registration R,
+        			lecture_action_plan LAP,
+        			lecture_acplearn_check LAC
+        		WHERE
+        			R.lec_idx = LS.lec_idx
+        			AND R.stu_idx = LAP.stu_idx
+        			AND LAP.lap_idx = LAC.lap_idx
+        			AND LAC.lac_date = LAD.lad_date
+        			AND LAC.lac_flag = 'others'
+        			AND R.stu_idx=LAD.stu_idx
+        	) as avgOthersScore
+
+        FROM
+        	lecture_session LS,
+        	lecture_acplearn_day LAD
+
+        WHERE
+        	LS.lec_idx = ?
+        	AND LAD.stu_idx = ?
+        	AND LS.ls_idx = LAD.ls_idx`
+
+    // 플랜별 점수
+    var planAvgSQL = `
+        SELECT
+        	LAP.lap_idx as lap_idx,
+        	LAP.lap_text as lap_text,
+        	DATE_FORMAT(LAD.lad_date, '%m/%d') as lad_date,
+            CC2.cc2_name as cc2_name,
+        	(
+        		SELECT AVG(LAC.lac_score)
+        		FROM lecture_acplearn_check LAC
+        		WHERE
+        			LAC.lap_idx = LAP.lap_idx
+        			AND LAC.lac_date = LAD.lad_date
+        			AND LAC.lac_flag = 'self'
+        	) as avgSelfScore,
+        	(
+        		SELECT AVG(LAC.lac_score)
+        		FROM lecture_acplearn_check LAC
+        		WHERE
+        			LAC.lap_idx = LAP.lap_idx
+        			AND LAC.lac_date = LAD.lad_date
+        			AND LAC.lac_flag = 'others'
+        	) as avgOthersScore
+
+        FROM
+            capability_category2 CC2,
+	        lecture_kpi LK,
+        	lecture_action_plan LAP,
+        	lecture_acplearn_day LAD
+
+        WHERE
+        	LAP.stu_idx = ?
+        	AND LAP.stu_idx = LAD.stu_idx
+            AND LK.lk_idx = LAP.lk_idx
+	        AND CC2.cc2_idx = LK.cc2_idx `
+
+
+    pool.getConnection((er, connection)=>{
+        if (er) {
+            connection.release()
+            throw er
+            return
+        }
+
+        // 누적 평균점수
+        connection.query(kpiAvgSQL , [stu_idx, stu_idx, lec_idx], (kpiAvgErr, kpiAvgResult)=>{
+            if (kpiAvgErr) {
+                console.log(kpiAvgErr);
+                connection.release()
+                res.send(500, {result : 'error'})
+                return
+            }
+            // 전체플랜 평균점수
+            connection.query(studentAvgSQL , [lec_idx, stu_idx], (studentAvgErr, studentAvgResult)=>{
+                if (studentAvgErr) {
+                    console.log(studentAvgErr);
+                    connection.release()
+                    res.send(500, {result : 'error'})
+                    return
+                }
+
+                // 플랜별 점수
+                connection.query(planAvgSQL, [stu_idx], (planAvgErr, planAvgResult)=>{
+                    connection.release()
+                    if (planAvgErr) {
+                        console.log(planAvgErr);
+                        res.send(500, {result : 'error'})
+                        return
+                    }
+
+                    var plans = []
+                    for(var ii  in  planAvgResult){
+                        if (ii == 0) {
+                            plans.push({
+                                lap_idx : planAvgResult[ii].lap_idx,
+                                lap_text : planAvgResult[ii].lap_text,
+                                cc2_name : planAvgResult[ii].cc2_name,
+                                score : []
+                            })
+                        }else{
+                            if (planAvgResult[ii-1].lap_idx != planAvgResult[ii].lap_idx) {
+                                plans.push({
+                                    lap_idx : planAvgResult[ii].lap_idx,
+                                    lap_text : planAvgResult[ii].lap_text,
+                                    cc2_name : planAvgResult[ii].cc2_name,
+                                    score : []
+                                })
+                            }
+                        }// else
+
+                    }// for
+
+                    for(var ii  in  plans){
+                        for(var jj  in  planAvgResult){
+                            if (plans[ii].lap_idx === planAvgResult[jj].lap_idx) {
+                                // 해당 플랜의 점수를 찾아서 푸시
+                                plans[ii].score.push({
+                                    avgSelfScore        : planAvgResult[jj].avgSelfScore,
+                                    avgOthersScore   : planAvgResult[jj].avgOthersScore,
+                                    lad_date               : planAvgResult[jj].lad_date
+                                })
+                            }
+                        }// for
+                    }// for
+
+                    res.send(200, {
+                        kpiAvg : kpiAvgResult,
+                        allAvg : studentAvgResult,
+                        plans
+                    })
+
+                }) // 플랜별 점수
+            })// 전체플랜 평균점수
+        })// 전체플랜 평균점수
+    })// pool
+
+
+})
+// ====== 개별 통계 데이터 ====== //
+
+
+
+
+
+
+
+
+
+router.get('/comments/:stu_idx', (req, res, next)=>{
+    /*
+    /comments/197?lap_idx=20
+    stu_idx : 수강생
+    */
+
+    var stu_idx = req.params.stu_idx // 수강생아이디
+    var lap_idx = req.query.lap_idx // 플랜별로 찾을때 플랜아이디 - 쿼리스트링
+    var params = [stu_idx] // 디비 파라미터
+    var temp=''
+
+
+    if (lap_idx != undefined && lap_idx != null) {
+        temp = `AND LAP.lap_idx = ?`
+        params.push(lap_idx)
+    }
+
+    var sql = `
+        SELECT
+        	LAP.lap_idx ,
+        	date_format(AC.ac_date, '%Y-%m-%d') as ac_date,
+        	AC.ac_img,
+        	AC.ac_flag,
+        	AC.ac_contents,
+	        R.stu_name,
+	        R.stu_gender
+
+        FROM
+        	lecture_action_plan LAP,
+        	acplearn_cheerup AC
+            LEFT JOIN registration R
+	        ON AC.stu_idx = R.stu_idx
+
+        WHERE
+        	LAP.stu_idx = ?
+            `+temp+`
+        	AND LAP.lap_idx = AC.lap_idx `
+
+    pool.getConnection((er, connection)=>{
+        if (er) {
+            throw er
+            return
+        }
+
+        connection.query(sql, params, (err, result)=>{
+            connection.release()
+            if (err) {
+                res.send(500, {result:'error'})
+                return
+            }
+
+            res.send(200, {comments:result})
+        })
+    })
+})
 
 
 

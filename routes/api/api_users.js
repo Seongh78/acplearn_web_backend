@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var passport = require('passport');
+var request = require('request');
 
 var LocalStrategy = require('passport-local').Strategy;
 var conn = require('../common/dbconn').connection;
@@ -47,7 +48,7 @@ router.get('/confirm/:id', function(req, res, next) {
         }
 
     });
-    
+
 });
 
 // New tutor
@@ -203,10 +204,12 @@ router.get('/login/naver', passport.authenticate('naver', {
 
 
 
-// 네이버 콜백
-router.get('/gg', (req,res,next)=>{
-    console.log(111);
-    res.status(200).send({data:100})
+// 자동로그인
+router.get('/autologin', (req,res,next)=>{
+    request.post('http://localhost:3000/api/users/login', {id:'admin',pw:'123123'}, ()=>{
+        res.send(200, {a:1})
+    })
+
 });
 
 
