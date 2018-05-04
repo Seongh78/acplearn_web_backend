@@ -438,6 +438,34 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ====== 개별 통계 데이터 ====== //
 router.get('/personal/:lec_idx/:stu_idx', (req, res, next)=>{
     var lec_idx = req.params.lec_idx // 강의아이디
@@ -725,6 +753,123 @@ router.get('/comments/:stu_idx', (req, res, next)=>{
 
 
 
+
+
+// ====== 강의별 액션플랜 불러오기 - 테스트 ====== //
+router.get('/ap/:lec_idx', (req, res, next)=>{
+    var lec_idx = req.params.lec_idx
+    var classification = req.query.classification // 분류 : group, departments, position, gender
+    var value = req.query.value // 분류의 값
+    var temp=``
+    var params=[lec_idx]
+
+    if(value!=undefined)
+        params.push(value)
+
+    switch (classification) {
+        case 'group':
+            temp=`AND
+            R.group_idx=?`
+        break;
+        case 'departments':
+            temp=`AND
+            R.stu_department=?`
+        break;
+        case 'position':
+            temp=`AND
+            R.stu_position=?`
+        break;
+        case 'gender':
+            temp=`AND
+            R.stu_gender=?`
+        break;
+    }
+
+    var sql = `
+        SELECT
+        	R.stu_name ,
+        	LAP.lap_text,
+        	LAP.ls_idx,
+            LK.lk_idx,
+        	CC2.cc2_name,
+        	(
+        		SELECT  AVG(LAC.lac_score)
+        		FROM  lecture_acplearn_check LAC
+        		WHERE
+        			LAP.lap_idx = LAC.lap_idx
+        			AND LAC.lac_flag = 'before'
+        	) as beforeScore,
+        	(
+        		SELECT  AVG(LAC.lac_score)
+        		FROM  lecture_acplearn_check LAC
+        		WHERE
+        			LAP.lap_idx = LAC.lap_idx
+        			AND LAC.lac_flag = 'self'
+        	) as selfScore,
+        	(
+        		SELECT  AVG(LAC.lac_score)
+        		FROM  lecture_acplearn_check LAC
+        		WHERE
+        			LAP.lap_idx = LAC.lap_idx
+        			AND LAC.lac_flag = 'others'
+        	) as othersScore
+
+        FROM
+        	registration R,
+        	lecture_kpi LK,
+        	capability_category2 CC2,
+        	lecture_action_plan LAP
+
+        WHERE
+        	R.lec_idx = ?
+        	AND R.stu_idx = LAP.stu_idx
+        	AND LAP.lk_idx = LK.lk_idx
+        	AND LK.cc2_idx = CC2.cc2_idx
+            `+temp
+
+
+    pool.getConnection((er, connection)=>{
+        if (er) {
+            connection.release()
+            throw er
+            return
+        }
+
+        // 쿼리실행
+        connection.query(sql, params, (err, result)=>{
+            if (err) {
+                connection.release()
+                console.log(err);
+                res.send(500, {result:'database error'})
+                return
+            }
+
+            connection.release()
+            res.send(200, {
+                plans : result
+            })
+        }) // 쿼리실행
+    })
+})
+// ====== 강의별 액션플랜 불러오기 - 테스트 ====== //
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ====== 강의별 액션플랜 불러오기 ====== //
 router.get('/:lec_idx', isAuth, (req, res, next)=>{
 
@@ -733,13 +878,14 @@ router.get('/:lec_idx', isAuth, (req, res, next)=>{
 
     var sql = `
         SELECT
-            LAP.lap_idx   as   lap_idx,
-            LAP.lap_text   as   lap_text,
-            LAP.lk_idx   as   lk_idx,
-            LAP.stu_idx   as   stu_idx,
-            LS.ls_idx   as   ls_idx,
-            LS.ls_seq   as   ls_seq,
-            CC2.cc2_name as cc2_name,
+            LAP.lap_idx,
+            LAP.lap_text,
+            LAP.lk_idx,
+            LAP.stu_idx,
+            R.stu_name,
+            LS.ls_idx,
+            LS.ls_seq,
+            CC2.cc2_name,
             (
             	SELECT AVG(LAC.lac_score)
             	FROM lecture_acplearn_check LAC
@@ -753,19 +899,22 @@ router.get('/:lec_idx', isAuth, (req, res, next)=>{
         FROM
             lecture_action_plan LAP,
             lecture_session LS,
+            registration R,
            	lecture_kpi LK,
            	capability_category2 CC2
         WHERE
 	        LS.lec_idx = ?  AND
 	        LAP.ls_idx = LS.ls_idx  AND
 	        LAP.lk_idx = LK.lk_idx  AND
-	        LK.cc2_idx = CC2.cc2_idx
+	        LK.cc2_idx = CC2.cc2_idx AND
+            LAP.stu_idx = R.stu_idx
         `
 
 
     pool.getConnection((er, connection)=>{
         if (er) {
             connection.release()
+            console.log(er);
             throw er
             return
         }
@@ -773,7 +922,7 @@ router.get('/:lec_idx', isAuth, (req, res, next)=>{
             connection.release()
             if (err) {
                 console.log(err);
-                res.send(500, {result: 'error'})
+                res.send(500, {result: 'error' , err})
                 return
             }
             res.status(200).send({ status : 200, plans: result })//response

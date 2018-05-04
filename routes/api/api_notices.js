@@ -8,7 +8,8 @@ var pool = require('./../common/dbconn').connectionPool; // 풀링방식
 
 
 
-// 공지관리
+
+// ========== 공지목록 ========== // => O
 router.get('/', function(req, res, next) {
     var sql =
     `select
@@ -44,27 +45,34 @@ router.get('/', function(req, res, next) {
     })
 
 });
-
-
-
-// 공지등록 - ADMIN PAGE
-router.get('/new', function(req, res, next) {
-  res.render('manager/index', {
-      view: 'notice/new',
-      title: '신규 공지등록'
-  });
-});
+// ========== 공지목록 ========== //
 
 
 
 
-router.post('/new', function(req, res, next) {
+
+
+
+
+
+
+
+
+
+// ========== 공지 등록 ========== // => O
+router.post('/', function(req, res, next) {
+    var insertTime = new Date()
+    var admin_idx = 1 // 변경예정
     var da = {
-        notice_title: req.body.title,
-        notice_text: req.body.text,
-        admin_idx : 1
-    };
-    var sql = "insert into notice set ?";
+        notice_title    : req.body.notice.title,
+        notice_text    : String(req.body.notice.content),
+        admin_idx     : admin_idx
+    }
+
+    console.log(typeof da[1]);
+    var sql = `INSERT INTO notice SET ?`;
+
+
     pool.getConnection((er, connection)=>{
         if (er) {
             connection.release()
@@ -72,18 +80,20 @@ router.post('/new', function(req, res, next) {
             return
         }
 
-        connection.query(sql, da, function(err, rs) {
+
+        connection.query(sql, [da], (err, rs)=>{
             connection.release()
             if (err) {
                 console.log(err);
                 res.json(500, {"result":500});
                 return;
             }
-            res.json(200, {"result":200});
+            res.send(200, {"result":200});
         }) // connection
     }) // pool
 
 });
+// ========== 공지 등록 ========== //
 
 
 
@@ -91,7 +101,19 @@ router.post('/new', function(req, res, next) {
 
 
 
-// 공지수정
+
+
+
+
+
+
+
+
+
+
+
+
+// ========== 공지수정 ========== //
 router.get('/edit/:id', function(req, res, next) {
     var nid = req.params.id;
     var sql = "select * from notice where notice_idx=?";
@@ -116,13 +138,19 @@ router.get('/edit/:id', function(req, res, next) {
         })//connection
     })// pool
 });
+// ========== 공지수정 ========== //
 
 
 
 
 
 
-// 공지수정
+
+
+
+
+
+// ========== 공지수정 ========== //
 router.post('/edit/:id', function(req, res, next) {
     var nid = req.params.id;
     var da = [
@@ -147,6 +175,7 @@ router.post('/edit/:id', function(req, res, next) {
         })//conn
     })// pool
 });
+// ========== 공지수정 ========== //
 
 
 
@@ -154,7 +183,9 @@ router.post('/edit/:id', function(req, res, next) {
 
 
 
-// 공지상세
+
+
+// ========== 공지상세 ========== //
 router.get('/:id', function(req, res, next) {
     var nid = req.params.id;
     console.log("nid : ", nid);
@@ -194,6 +225,7 @@ router.get('/:id', function(req, res, next) {
     }) // pool
 
 });
+// ========== 공지상세 ========== //
 
 
 
@@ -201,7 +233,13 @@ router.get('/:id', function(req, res, next) {
 
 
 
-// 공지상세
+
+
+
+
+
+
+// ========== 공지삭제 ========== //
 router.delete('/:id', function(req, res, next) {
     var nid = req.params.id;
     var sql = "delete from notice where notice_idx=?";
@@ -223,7 +261,7 @@ router.delete('/:id', function(req, res, next) {
     }) // pool
 
 });
-
+// ========== 공지삭제 ========== //
 
 
 

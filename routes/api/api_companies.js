@@ -100,6 +100,7 @@ router.post('/', (req, res, next)=>{
 router.get('/:id', (req,res,next)=>{
     var usr_idx = req.user.user.tutor_idx; // 유저아이디
     var cid = req.params.id
+    var detail = req.query.detail // 참여과정 정보 출력여부
 
     // 기업정보
     var companyInfoSQL = `
@@ -112,7 +113,7 @@ router.get('/:id', (req,res,next)=>{
     FROM company C
     WHERE C.com_code=?`
 
-    // 참여기업 목록
+    // 해당 기업이 참여한 과정목록
     var relationLecturesSQL = `
     SELECT
         L.lec_idx  as  lec_idx,
@@ -142,6 +143,16 @@ router.get('/:id', (req,res,next)=>{
                 connection.release()
                 console.log(err)
                 res.status(500).send({result: 'sql error'})
+                return
+            }
+
+            // 단순 기업정보 조회일 경우
+            if (detail == 'none') {
+                connection.release()
+                res.status(200).send({
+                    result          : 'success',
+                    company    : companyResult[0]
+                })
                 return
             }
 

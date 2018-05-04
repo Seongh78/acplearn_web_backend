@@ -133,107 +133,104 @@ router.get('/detail/:id', (req, res, next)=>{
         group : "SELECT * FROM `group` WHERE lec_idx=? ORDER BY group_idx ASC",
 
         students : `
-        SELECT *
-        FROM
-            company C ,
-            registration R
-        WHERE
-        R.lec_idx=? and R.com_code=C.com_code`,
+            SELECT *
+            FROM
+                company C ,
+                registration R
+            WHERE
+            R.lec_idx=? and R.com_code=C.com_code`,
 
         companies : `
-        SELECT *
-        FROM
-            company_manager CM,
-            company C
-        WHERE
-            CM.lec_idx=? and CM.com_code=C.com_code`,
+            SELECT *
+            FROM
+                company_manager CM,
+                company C
+            WHERE
+                CM.lec_idx=? and CM.com_code=C.com_code`,
 
         departments: `
-        SELECT
-            R.stu_department
-        FROM
-            registration R
-        WHERE
-            R.lec_idx = ? GROUP BY R.stu_department`,
+            SELECT
+                R.stu_department
+            FROM
+                registration R
+            WHERE
+                R.lec_idx = ? GROUP BY R.stu_department`,
 
         position: `
-        SELECT
-            stu_position
-        FROM
-            registration
-        WHERE
-            lec_idx = ? GROUP BY stu_position`,
+            SELECT
+                stu_position
+            FROM
+                registration
+            WHERE
+                lec_idx = ? GROUP BY stu_position`,
 
         kpi : `
-        SELECT
-            LK.lk_idx,
-            CC2.cc2_idx,
-            CC2.cc2_name
-        FROM
-            lecture_kpi LK,
-            capability_category2 CC2
-        WHERE
-            LK.lec_idx=? and CC2.cc2_idx=LK.cc2_idx`,
+            SELECT
+                LK.lk_idx,
+                CC2.cc2_idx,
+                CC2.cc2_name
+            FROM
+                lecture_kpi LK,
+                capability_category2 CC2
+            WHERE
+                LK.lec_idx=? and CC2.cc2_idx=LK.cc2_idx`,
 
         lecture      : `
-        SELECT
-        	L.lec_idx 			          as 	 lec_idx,
-        	date_format(L.lec_startDate, '%Y년 %m월 %d일')  as  lec_startDate,
-        	date_format(L.lec_endDate, '%Y년 %m월 %d일')  as 	lec_endDate,
-        	L.lec_title 		           as 	  lec_title,
-        	L.lec_personnel 	     as 	lec_personnel,
-        	L.lec_target		        as 	   lec_target,
-        	L.lec_time		             as 	lec_time,
-        	L.lec_content		      as 	 lec_content,
-        	L.lec_goal			         as 	lec_goal,
-        	L.lec_effect		         as 	lec_effect,
-        	L.lec_file			            as 	   lec_file,
-        	L.lec_flag			          as 	  lec_flag,
-        	L.lec_sessionCount	  as	  lec_sessionCount,
+            SELECT
+            	L.lec_idx,
+            	date_format(L.lec_startDate, '%Y년 %m월 %d일') as lec_startDate,
+            	date_format(L.lec_endDate, '%Y년 %m월 %d일') as lec_endDate,
+            	L.lec_title,
+            	L.lec_personnel,
+            	L.lec_target,
+            	L.lec_time,
+            	L.lec_content,
+            	L.lec_goal,
+            	L.lec_effect,
+            	L.lec_file,
+            	L.lec_flag,
+            	L.lec_sessionCount,
 
-        	LS.ls_idx			           as	ls_idx,
-        	LS.ls_title			            as 	ls_title,
-        	LS.ls_aplDate			   as 	ls_aplDate,
-        	LS.ls_location		        as	ls_location,
-            date_format(LS.ls_startDate, '%Y-%m-%d')   	 as  ls_startDate,
-            date_format(LS.ls_endDate,   '%Y-%m-%d')    as  ls_endDate,
-        	date_format(LS.ls_startTime, '%H:%i')		        as	ls_startTime,
-        	date_format(LS.ls_endTime, 	 '%H:%i')	   	       as  ls_endTime,
+            	LS.ls_idx,
+            	LS.ls_title,
+            	LS.ls_aplDate,
+            	LS.ls_location,
+                date_format(LS.ls_startDate, '%Y-%m-%d')  as  ls_startDate,
+                date_format(LS.ls_endDate,   '%Y-%m-%d')  as  ls_endDate,
+            	date_format(LS.ls_startTime, '%H:%i')  as  ls_startTime,
+            	date_format(LS.ls_endTime, 	 '%H:%i')  as  ls_endTime,
 
-        	LSC.lsc_idx 		as 	lsc_idx,
-        	LSC.lsc_title		as	lsc_title,
-            date_format(LSC.lsc_date, '%Y-%m-%d')   	as  lsc_date,
+            	LSC.lsc_idx,
+            	LSC.lsc_title,
+                date_format(LSC.lsc_date, '%Y-%m-%d')  as  lsc_date,
 
-        	LT.lt_idx			as	lt_idx,
-        	LT.lt_title			as	lt_title,
-        	date_format(LT.lt_startTime	, '%H:%i')		as	lt_startTime,
-        	date_format(LT.lt_startTime	, '%H:%i')		as 	lt_endTime,
+            	LT.lt_idx,
+            	LT.lt_title,
+            	date_format(LT.lt_startTime	, '%H:%i')  as  lt_startTime,
+            	date_format(LT.lt_startTime	, '%H:%i')  as  lt_endTime,
 
-        	LM.lm_idx           as  lm_idx,
-        	LM.lm_title         as  lm_title,
-            LM.lm_text          as  lm_text,
-            LM.lm_type          as  lm_type,
-            date_format(LM.lm_startTime, '%H:%i')     	as  lm_startTime,
-            date_format(LM.lm_endTime, 	 '%H:%i')       as  lm_endTime
+            	LM.lm_idx,
+            	LM.lm_title,
+                LM.lm_text,
+                LM.lm_type,
+                LM.lm_teacher,
+                date_format(LM.lm_startTime, '%H:%i')  as  lm_startTime,
+                date_format(LM.lm_endTime, 	 '%H:%i')  as  lm_endTime
 
-
-        FROM lecture L
-            LEFT    JOIN lecture_session LS
-            ON      L.lec_idx = LS.lec_idx
-
-            LEFT    JOIN lecture_session_class LSC
-            ON      LS.ls_idx = LSC.ls_idx
-
-            LEFT    JOIN lecture_timetable LT
-            ON      LSC.lsc_idx =LT.lsc_idx
-
-            LEFT    JOIN lecture_module LM
-            ON      LT.lt_idx = LM.lt_idx
-
-
-        WHERE
-            L.lec_idx=? and L.tutor_idx=?`
+            FROM
+                lecture L
+                LEFT JOIN lecture_session LS
+                    ON L.lec_idx = LS.lec_idx
+                LEFT JOIN lecture_session_class LSC
+                    ON LS.ls_idx = LSC.ls_idx
+                LEFT JOIN lecture_timetable LT
+                    ON LSC.lsc_idx =LT.lsc_idx
+                LEFT JOIN lecture_module LM
+                    ON LT.lt_idx = LM.lt_idx
+            WHERE
+                L.lec_idx=? and L.tutor_idx=?`
     }// q
+
     var lecture;
     var sessions = []
     var sessionClass = []
@@ -360,12 +357,13 @@ router.get('/detail/:id', (req, res, next)=>{
                 // 강의모듈
                 if(lectureResult[ii].lm_idx != null){
                     var lm = {
-                        lt_idx                 : lectureResult[ii].lt_idx,
+                        lt_idx                   : lectureResult[ii].lt_idx,
                         lm_idx                 : lectureResult[ii].lm_idx,
                         lm_startTime       : lectureResult[ii].lm_startTime,
                         lm_endTime        : lectureResult[ii].lm_endTime,
                         lm_title                : lectureResult[ii].lm_title,
                         lm_text                : lectureResult[ii].lm_text,
+                        lm_teacher          : lectureResult[ii].lm_teacher,
                         lm_type               : lectureResult[ii].lm_type
                     }
                     if (tempModules.length<1) {
