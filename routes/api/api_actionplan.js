@@ -290,6 +290,25 @@ router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ====== 진행데이터 ====== //
 router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
     var tutor_idx   = req.user.user.tutor_idx; // 강사아이디
@@ -297,9 +316,12 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
     var _filter      = req.query._filter // 분류
     var _value      = req.query._value // 분류
 
+    var sess = req.query.sess // 선택된 차시
+
     // 전체 평균 점수데이터
     var sql = `
         SELECT
+        	DATE_FORMAT(LAD.lad_date, '%Y-%m-%d') as originalDate,
         	DATE_FORMAT(LAD.lad_date, '%m/%d') as lad_date,
         	(
         		SELECT

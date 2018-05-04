@@ -131,7 +131,32 @@ router.get('/modules/:lm_idx', isAuth, (req,res,next)=>{
 
 
 
+// ====== 강의코멘트 푸시 ====== //
+router.post('/comment', (req, res, next)=>{
+    var da = req.body.cmt
+    var tempData = [] // 삽입데이터
+    var sql = `
+        INSERT INTO lecture_comment SET ? `
 
+    pool.getConnection((er, connection)=>{
+        if (er) {
+            throw er
+            return
+        }
+
+        connection.query(sql, [da], (err, result)=>{
+            connection.release()
+            if (err) {
+                console.log(err);
+                res.send(500, {result:err})
+                return
+            }
+
+            res.send(200, {result:'success'})
+        })
+    })
+})
+// ====== 강의코멘트 푸시 ====== //
 
 
 

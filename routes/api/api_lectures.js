@@ -190,11 +190,13 @@ router.get('/detail/:id', (req, res, next)=>{
             	L.lec_file,
             	L.lec_flag,
             	L.lec_sessionCount,
+            	L.lec_serialNo,
 
             	LS.ls_idx,
             	LS.ls_title,
             	LS.ls_aplDate,
             	LS.ls_location,
+            	LS.ls_seq,
                 date_format(LS.ls_startDate, '%Y-%m-%d')  as  ls_startDate,
                 date_format(LS.ls_endDate,   '%Y-%m-%d')  as  ls_endDate,
             	date_format(LS.ls_startTime, '%H:%i')  as  ls_startTime,
@@ -282,6 +284,7 @@ router.get('/detail/:id', (req, res, next)=>{
                 lec_goal                     : lectureResult[0].lec_goal,
                 lec_effect                  : lectureResult[0].lec_effect,
                 lec_target                  : lectureResult[0].lec_target,
+                lec_serialNo               : lectureResult[0].lec_serialNo,
                 sessions : []
             }// lecture
 
@@ -304,6 +307,7 @@ router.get('/detail/:id', (req, res, next)=>{
                         ls_aplDate          : lectureResult[ii].ls_aplDate,
                         ls_title                 : lectureResult[ii].ls_title,
                         ls_location          : lectureResult[ii].ls_location,
+                        ls_seq                 : lectureResult[ii].ls_seq,
                         ls_startTime        : lectureResult[ii].ls_startTime,
                         ls_endTime         : lectureResult[ii].ls_endTime,
                         sessionClass        : []
@@ -528,13 +532,21 @@ router.get('/dt/:id', (req, res, next)=>{
     var q={
         group           : "SELECT * FROM `group` WHERE lec_idx=? ORDER BY group_idx ASC",
 
-        students       : `SELECT * FROM company C , registration R  WHERE R.lec_idx=? and R.com_code=C.com_code`,
-        companies   : 'SELECT * FROM company_manager CM, company C WHERE CM.lec_idx=? and CM.com_code=C.com_code',
-        kpi                : ` SELECT       CC2.cc2_idx, CC2.cc2_name
-                                FROM        lecture_kpi LK, capability_category2 CC2
-                                WHERE      LK.lec_idx=? and CC2.cc2_idx=LK.cc2_idx`,
-        lecture      :
-        `
+        students       : `
+            SELECT *
+            FROM company C , registration R
+            WHERE R.lec_idx=? and R.com_code=C.com_code `,
+
+        companies   : `
+            SELECT *
+            FROM        company_manager CM, company C
+            WHERE     CM.lec_idx=? and CM.com_code=C.com_code `,
+
+        kpi : `
+            SELECT      CC2.cc2_idx, CC2.cc2_name
+            FROM        lecture_kpi LK, capability_category2 CC2
+            WHERE      LK.lec_idx=? and CC2.cc2_idx=LK.cc2_idx `,
+        lecture      : `
             SELECT
             	L.lec_idx 			          as 	 lec_idx,
             	L.lec_startDate 	      as 	 lec_startDate,
@@ -591,8 +603,7 @@ router.get('/dt/:id', (req, res, next)=>{
 
 
             WHERE
-                L.lec_idx=? and L.tutor_idx=?
-        `
+                L.lec_idx=? and L.tutor_idx=?     `
     }// q
 
     var lecture;
@@ -2321,23 +2332,68 @@ router.post('/xlsToJson/:sheetNumber', (req,res,next)=>{
 // ====== 관리자 - 강의개설 승인 ====== //
 router.put('/confirm/:id', (req,res,next)=>{
     var lec_idx = req.params.id // 강의아이디
-    var confirmSQL = ` UPDATE lecture SET lec_flag = '강의전' WHERE lec_idx=? `
+    var today = new Date()
+    var findIdSQL = `SELECT T.tutor_id FROM tutor T, lecture L  WHERE L.lec_idx=? AND L.tutor_idx=T.tutor_idx`
+    var confirmSQL = ` UPDATE lecture SET lec_flag = '강의전' , lec_serialNo=? WHERE lec_idx=? `
+    var randomId = ((1 + Math.random()) * 0x10000 | 0).toString(16).substring(1); // 랜덤수
+
+    var lec_code = ''
 
     pool.getConnection((er, connection)=>{
-        connection.query(confirmSQL, [lec_idx], (confirmErr, confirmResult)=>{
-            connection.release()
-            if (confirmErr) {
-                console.log(confirmErr)
-                res.send(500, {result:'error - confirm'})
-                return
-            }
 
-            res.send(200, {result:'success'})
+        connection.query(findIdSQL, [lec_idx], (tutorErr, tutorResult)=>{
+            lec_code = String(tutorResult[0].tutor_id[0]) + String(today.getDate()) + '-' + String(randomId)
+
+            connection.query(confirmSQL, [lec_idx, lec_code], (confirmErr, confirmResult)=>{
+                connection.release()
+                if (confirmErr) {
+                    console.log(confirmErr)
+                    res.send(500, {result:'error - confirm'})
+                    return
+                }
+
+                res.send(200, {result:'success'})
+            }) // connection
         }) // connection
+
     })// pool
 })
 // ====== 관리자 - 강의개설 승인 ====== //
 
+
+
+
+router.get('/confirm2', (req,res,next)=>{
+    var lec_idx = req.query.id // 강의아이디
+    var today = new Date()
+    var findIdSQL = `SELECT T.tutor_id FROM tutor T, lecture L  WHERE L.lec_idx=? AND L.tutor_idx=T.tutor_idx`
+    var randomId = ((1 + Math.random()) * 0x10000 | 0).toString(16).substring(1); // 랜덤수
+
+    var lec_code = ''
+
+    pool.getConnection((er, connection)=>{
+
+        connection.query(findIdSQL, [lec_idx], (tutorErr, result)=>{
+            connection.release()
+            if (tutorErr) {
+                console.log(tutorErr)
+                res.send(500, {result:'error - confirm'})
+                return
+            }
+
+            console.log(lec_idx+' : '+result);
+            lec_code = String(result[0].tutor_id[0]) + String(today.getDate()) + '-' + String(randomId)
+
+            res.send(200,{
+                result,
+                lec_code
+            })
+        }) // connection
+
+    })
+
+
+})
 
 
 
