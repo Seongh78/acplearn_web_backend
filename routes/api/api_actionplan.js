@@ -309,14 +309,25 @@ router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
 
 
 
-// ====== 진행데이터 ====== //
+// ====== 전체평균 ====== //
 router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
     var tutor_idx   = req.user.user.tutor_idx; // 강사아이디
     var lec_idx      = req.params.lec_idx // 강의아이디
-    var _filter      = req.query._filter // 분류
-    var _value      = req.query._value // 분류
-
+    var _kpi          = req.query.kpi // 선택한 KPI
     var sess = req.query.sess // 선택된 차시
+    var params=[] // 추가쿼리
+    var tempSQL='' // 추가쿼리
+
+
+    if (_kpi !== undefined  &&  _kpi !== null  &&  _kpi !== '') {
+        // console.log(_kpi);
+        tempSQL = `AND LAP.lk_idx = ?`
+        params=[_kpi,_kpi]
+    }
+    params.push(lec_idx) // 강의아이디 - 쿼리 파라미터 순서때문에 아래쪽에 작성
+
+
+    // console.log(params);
 
     // 전체 평균 점수데이터
     var sql = `
@@ -336,6 +347,7 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
         			AND LAP.lap_idx = LAC.lap_idx
         			AND LAC.lac_date = LAD.lad_date
         			AND LAC.lac_flag = 'self'
+                    `+tempSQL+`
         	) as avgSelfScore,
         	(
         		SELECT
@@ -350,6 +362,7 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
         			AND LAP.lap_idx = LAC.lap_idx
         			AND LAC.lac_date = LAD.lad_date
         			AND LAC.lac_flag = 'others'
+                    `+tempSQL+`
         	) as avgOthersScore
 
         FROM
@@ -413,7 +426,7 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
         }
 
         // 부서/직급 별 액플런 찾기
-        connection.query(sql, [lec_idx], (err , departmentsResult)=>{
+        connection.query(sql, params, (err , departmentsResult)=>{
             if (err) {
                 connection.release()
                 console.log(err);
@@ -425,7 +438,6 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
             connection.query(kpiAvgSQL, [lec_idx], (kpiAvgErr, kpiAvgResult)=>{
                 if (kpiAvgErr) {
                     connection.release()
-                    console.log(kpiAvgErr);
                     res.send(500, {reuslt:kpiAvgErr})
                     return
                 }
@@ -444,7 +456,7 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
 
 
 })
-// ====== 진행데이터 ====== //
+// ====== 전체평균 ====== //
 
 
 

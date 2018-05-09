@@ -41,6 +41,7 @@ var api_students            = require('./routes/api/api_students');
 var api_administrator    = require('./routes/api/api_administrator');
 var api_actionplan    = require('./routes/api/api_actionplan');
 var api_comments    = require('./routes/api/api_comments');
+var api_acastar    = require('./routes/api/api_acastar');
 
 
 
@@ -144,6 +145,7 @@ app.use('/api/lectures',                isAuth, api_lectures)
 app.use('/api/users',                    api_users)
 app.use('/api/plans',                    api_actionplan)
 app.use('/api/comments',           api_comments) // 피드백/코멘트 관리
+app.use('/api/acastar',                 api_acastar) // 피드백/코멘트 관리
 
 app.use('/labs',                    labs)
 app.use('/',                    index)
@@ -173,6 +175,25 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error', {page:'error'});
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

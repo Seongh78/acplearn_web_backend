@@ -207,19 +207,4 @@ router.get('/kpi', (req, res, next)=>{
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 module.exports = router;
