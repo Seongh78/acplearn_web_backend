@@ -51,7 +51,7 @@ router.get('/:code/:lectureCode', (req, res, next)=>{
         	ON L.lec_idx = LS.lec_idx
 
         WHERE
-        	L.lec_idx=? `
+        	L.lec_externalCode=? `
 
     // 권한검사
     if (code !== 'acastar') {
