@@ -111,7 +111,18 @@ router.get('/:code/:lectureCode', (req, res, next)=>{
             res.send(200, {
                 status : 200,
                 message: 'success',
-                lecture
+                lecture,
+                attendance:[
+                    {
+                        seq: 1,
+                        percentage: 50
+                    },
+                    {
+                        seq: 2,
+                        percentage: 80
+                    }
+                ],
+                participation: 75
             })
         })
     })
