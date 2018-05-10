@@ -65,7 +65,11 @@ app.use(cors({
         'http://localhost:3333',
         'http://www.actiongo.co.kr',
         'http://www.actiongo.co.kr/',
-        'http://www.actiongo.co.kr/login'
+        'http://www.actiongo.co.kr/login',
+
+        // 아카스타서버
+        'http://m.acastar.co.kr',
+        'http://218.50.3.136/'
     ],
     methods:["GET","POST","PUT", "DELETE"], // 허용 메소드
     credentials: true // enable set cookie
