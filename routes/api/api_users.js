@@ -7,7 +7,7 @@ var LocalStrategy = require('passport-local').Strategy;
 var conn = require('../common/dbconn').connection;
 var ensureAuthenticated = require('../common/passport').ensureAuthenticated;
 var isAuth = require('../common/passport').isAuth;
-
+var pool = require('../common/dbconn').connectionPool; // 풀링방식
 
 // Redirect to Front-end
 var toFrontUrl = "http://localhost:8080"
@@ -67,22 +67,47 @@ router.post('/new', function(req, res, next) {
         req.body.career
     ];
 
-    res.send(inputData)
-    return
 
-    var sql = "INSERT INTO `tutor`(tutor_id, tutor_pw, tutor_name, tutor_phone, tutor_email,) SET tutor_id=?, tutor_pw=?, tutor_name=?, tutor_phone=?, tutor_gender=?";
-    conn.query(sql, inputData, function(err, rs) {
-        if (err) {
-            res.status(500).send({
-                result: "Error",
-                msg: err
-            });
-            return;
+    // res.send(inputData)
+    // return
+
+    var sql = `
+        INSERT INTO tutor SET
+            tutor_id=?,
+            tutor_pw=PASSWORD(?),
+            tutor_name=?,
+            tutor_phone=?,
+            tutor_email=?,
+            tutor_gender=?,
+            tutor_birthday=?,
+            tutor_company=?,
+            tutor_position=?,
+            tutor_intro=?,
+            tutor_profile=? `;
+
+
+
+    pool.getConnection((er, connection)=>{
+        if (er) {
+            console.log(er);
+            throw er
+            return
         }
-        res.status(200).send({
-            result: "Success"
+        connection.query(sql, inputData, function(err, rs) {
+            connection.release()
+            if (err) {
+                console.log(err);
+                res.status(500).send({
+                    result: "Error",
+                    msg: err
+                });
+                return;
+            }
+            res.status(200).send({
+                result: "Success"
+            });
         });
-    });
+    })// pool
 });
 
 

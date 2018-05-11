@@ -1058,6 +1058,8 @@ router.post('/create/summary', (req, res, next)=>{
     da.tutor_idx = req.user.user.tutor_idx
     da.lec_title = da.lec_title ? da.lec_title : '[임시저장] 저장시간 : '+new Date()
 
+    console.log(da);
+
     pool.getConnection((er, connection)=>{
         if (er) {
             connection.release()

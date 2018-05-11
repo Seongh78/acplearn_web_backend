@@ -22,8 +22,8 @@ router.get('/:code/:lectureCode', (req, res, next)=>{
     var sql = `
         SELECT
         	L.lec_idx,
-        	lec_startDate,
-        	lec_endDate,
+        	DATE_FORMAT(lec_startDate, '%Y-%m-%d') as lec_startDate,
+        	DATE_FORMAT(lec_endDate, '%Y-%m-%d') as lec_endDate,
         	L.lec_title,
         	L.lec_personnel,
         	L.lec_target,
@@ -143,6 +143,8 @@ router.post('/', (req, res, next)=>{
         reqStudents : req.body.studens // 수강생목록
     }
 
+    console.log(lms);
+
     try {
         if (lms.code !== 'acastar') {
             res.send(403, {
@@ -153,7 +155,7 @@ router.post('/', (req, res, next)=>{
 
         res.send(200, {
             status: 200,
-            message: 'success',
+            message: 'success - 주의해주시죠!',
             inputData: lms
         })
     } catch (e) {
