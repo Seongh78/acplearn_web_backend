@@ -891,26 +891,26 @@ router.post('/complete',  (req, res, next)=>{
     var lec_idx = req.body.lec_idx // 강의 아이디
     var sessions = req.body.sessions // 회차정보
 
-    var student_count = req.body.student_count //학생수
-    var session_count = req.body.session_count // 세션수
+    var student_count       = req.body.student_count //학생수
+    var session_count        = req.body.session_count // 세션수
+    var classCount             = req.body.class_count // 오프라인 강의 카운트 - 출석부만들기 위해서 필요
+    var tempAttendance   = []
 
     // 플래그변경 쿼리
     var completeSQL = `
-        UPDATE lecture
-        SET lec_flag='승인대기'
-        WHERE lec_idx=? and tutor_idx=?`
+        UPDATE  lecture  SET  lec_flag='승인대기'  WHERE lec_idx=? and tutor_idx=?`
+
+    // 수강생 출석데이터 생성
+    var attendanceSQL = `
+        UPDATE registration SET stu_attendance = ? WHERE lec_idx = ? `
 
     // 수강생정보 찾기
     var studentsSQL = `
-        SELECT stu_idx
-        FROM registration
-        WHERE lec_idx = ?`
+        SELECT stu_idx FROM registration WHERE lec_idx = ?`
 
     // 액플런데이 추가 쿼리
     var acplearnDaySQL = `
-        INSERT
-        INTO lecture_acplearn_day(lad_date, ls_idx, stu_idx)
-        VALUES ?`
+        INSERT INTO lecture_acplearn_day(lad_date, ls_idx, stu_idx) VALUES ?`
 
     // 기존 데이터 초기화 쿼리
     var ladDeleteSQL = `
@@ -931,10 +931,22 @@ router.post('/complete',  (req, res, next)=>{
 
 
 
+    // 출석카운트 만들기
+    for(var ii=0;   ii<classCount;   ii++){
+        tempAttendance.push(1)
+    }
+    tempAttendance = String(tempAttendance) // 문자열로 저장
+    console.log(tempAttendance);
+
+
 
     // pool
     pool.getConnection((er,connection)=>{
-
+        if (er) {
+            console.log(er);
+            throw er
+            return
+        }
 
         // 강의플래그 변경 쿼리
         connection.query(completeSQL, [lec_idx, tutor_idx], (completeErr, completeResult)=>{
@@ -955,75 +967,84 @@ router.post('/complete',  (req, res, next)=>{
                 }
 
 
-                // 수강생찾기 쿼리
-                connection.query(studentsSQL, [lec_idx], (studentsErr, studentsResult)=>{
-                    if( studentsErr ){
+                // attendanceSQL
+                connection.query(attendanceSQL, [tempAttendance, lec_idx], (attendanceErr, attendanceResult)=>{
+                    if( attendanceErr ){
                         connection.release()
-                        console.log(studentsErr);
-                        res.send(500, {result:'studentsErr'})
+                        console.log(attendanceErr);
+                        res.send(500, {result:'attendanceErr'})
                         return
                     }
-
-                    // 수강생이 있을경우 수강생 수만큼 액플런데이 생성
-                    if(studentsResult.length>0){
-
-                        try {
-                            // 액플런데이 일수 구하기
-                            var stdKeys = Object.keys(studentsResult) // 수강생 키
-                            var keys = Object.keys(sessions) // 회차 키
-
-                            for(var rid  in  stdKeys){// #0
-                                for(var sid  in  keys){ // #1
-                                    sdt = new Date(sessions[sid].ls_aplDate);  // 시작일
-                                    edt = new Date(sessions[sid].ls_endDate); // 종료일
-                                    dateDiff = Math.ceil((edt.getTime()-sdt.getTime())/(1000*3600*24)); // 차일
-
-                                    // 차시별 액플런데이 만들기
-                                    for(var ii=0;  ii <= dateDiff;  ii++){ // #2
-                                        // 증감연산
-                                        tempDate = new Date(sdt)
-                                        tempDate.setDate(sdt.getDate()+ii)
-
-                                        // 날짜포맷 만들기
-                                        tempString     = tempDate.getFullYear()+"-"
-                                        tempString   += (tempDate.getMonth()+1) + "-"
-                                        tempString   += tempDate.getDate()
-
-                                        // 데이터 푸시
-                                        tempLAD.push([
-                                            tempString, // 날짜
-                                            sessions[sid].ls_idx, // 회차 아이디
-                                            studentsResult[rid].stu_idx // 수강생 아이디
-                                        ])
-                                    }// #2
-                                }// #1
-                            }// # 0
-
-                        } catch (e) {
-                            console.log(e);
-                            res.send(500, { result : 'Error' })
+                    // 수강생찾기 쿼리
+                    connection.query(studentsSQL, [lec_idx], (studentsErr, studentsResult)=>{
+                        if( studentsErr ){
+                            connection.release()
+                            console.log(studentsErr);
+                            res.send(500, {result:'studentsErr'})
                             return
                         }
 
-                        // 액플런데이 쿼리
-                        connection.query(acplearnDaySQL, [tempLAD], (aplearnDayErr, acplearnDayResult)=>{
-                            connection.release()
-                            if( aplearnDayErr ){
-                                console.log(aplearnDayErr);
-                                res.send(500, {result:'aplearnDayErr'})
+                        // 수강생이 있을경우 수강생 수만큼 액플런데이 생성
+                        if(studentsResult.length>0){
+
+                            try {
+                                // 액플런데이 일수 구하기
+                                var stdKeys = Object.keys(studentsResult) // 수강생 키
+                                var keys = Object.keys(sessions) // 회차 키
+
+                                for(var rid  in  stdKeys){// #0
+                                    for(var sid  in  keys){ // #1
+                                        sdt = new Date(sessions[sid].ls_aplDate);  // 시작일
+                                        edt = new Date(sessions[sid].ls_endDate); // 종료일
+                                        dateDiff = Math.ceil((edt.getTime()-sdt.getTime())/(1000*3600*24)); // 차일
+
+                                        // 차시별 액플런데이 만들기
+                                        for(var ii=0;  ii <= dateDiff;  ii++){ // #2
+                                            // 증감연산
+                                            tempDate = new Date(sdt)
+                                            tempDate.setDate(sdt.getDate()+ii)
+
+                                            // 날짜포맷 만들기
+                                            tempString     = tempDate.getFullYear()+"-"
+                                            tempString   += (tempDate.getMonth()+1) + "-"
+                                            tempString   += tempDate.getDate()
+
+                                            // 데이터 푸시
+                                            tempLAD.push([
+                                                tempString, // 날짜
+                                                sessions[sid].ls_idx, // 회차 아이디
+                                                studentsResult[rid].stu_idx // 수강생 아이디
+                                            ])
+                                        }// #2
+                                    }// #1
+                                }// # 0
+
+                            } catch (e) {
+                                console.log(e);
+                                res.send(500, { result : 'Error' })
                                 return
                             }
 
+                            // 액플런데이 쿼리
+                            connection.query(acplearnDaySQL, [tempLAD], (aplearnDayErr, acplearnDayResult)=>{
+                                connection.release()
+                                if( aplearnDayErr ){
+                                    console.log(aplearnDayErr);
+                                    res.send(500, {result:'aplearnDayErr'})
+                                    return
+                                }
+
+                                res.send(200, { result : 'success' })
+                            }) // 액플런데이 쿼리
+
+                        }else{
+                            connection.release()
                             res.send(200, { result : 'success' })
-                        }) // 액플런데이 쿼리
+                            return
+                        }// else
 
-                    }else{
-                        connection.release()
-                        res.send(200, { result : 'success' })
-                        return
-                    }// else
-
-                })// 수강생찾기 쿼리
+                    })// 수강생찾기 쿼리
+                })// attendanceSQL
 
             })// 기존 액플런데이 삭제
 
@@ -1637,7 +1658,12 @@ router.post('/create/aplterm', (req, res, next)=>{
 
 
 
-// ====== (Dev)신규강의 - 상세시간표 : lecture_timetable ====== //
+
+/* ========================================
+
+(Dev)신규강의 - 상세시간표 : lecture_timetable
+
+======================================== */
 router.post('/create/timetable', (req, res, next)=>{
     var lec_idx    = req.body.lec_idx
     var ls_idx    = req.body.ls_idx
@@ -1805,7 +1831,9 @@ router.post('/create/timetable', (req, res, next)=>{
     })
 
 })
-// ====== 신규강의 - 상세시간표 : lecture_timetable ====== //
+/* ========================================
+신규강의 - 상세시간표 : lecture_timetable
+======================================== */
 
 
 
@@ -1819,7 +1847,11 @@ router.post('/create/timetable', (req, res, next)=>{
 
 
 
-// ====== (O)신규강의 - KPI : lecture_kpi ====== //
+/* ========================================
+
+(O)신규강의 - KPI : lecture_kpi
+
+======================================== */
 router.post('/create/kpi', (req, res, next)=>{
     var flag = req.body.flag // 신규/수정 여부확인용 플래그
     var lec_idx    = req.body.lec_idx
@@ -1862,7 +1894,10 @@ router.post('/create/kpi', (req, res, next)=>{
 
 
 
-})// ====== 신규강의 - KPI : lecture_kpi ====== //
+})
+/* ========================================
+(O)신규강의 - KPI : lecture_kpi
+======================================== */
 
 
 
@@ -1876,8 +1911,11 @@ router.post('/create/kpi', (req, res, next)=>{
 
 
 
+/* ========================================
 
-// ====== (O) 신규강의 - 매니저&참여기업 : company_manager ====== //
+(O) 신규강의 - 매니저&참여기업 : company_manager
+
+======================================== */
 router.post('/create/manager', (req, res, next)=>{
     //  lec_idx, com_code, mg_name, mg_phone, mg_position //
     var deleteSQL = "DELETE FROM company_manager WHERE lec_idx=?"
@@ -1888,7 +1926,6 @@ router.post('/create/manager', (req, res, next)=>{
         stu_phone,
         stu_department,
         stu_position,
-        stu_attendance,
         com_code,
         lec_idx
     ) VALUES ?`
@@ -1896,12 +1933,11 @@ router.post('/create/manager', (req, res, next)=>{
     var lec_idx                 = req.body.lec_idx // 강의아이디
     var da                        = req.body.companies // 업체정보
     var students              = req.body.students // 업체정보
-    var sessionCount      = req.body.sessionCount // 차시 카운트 - 출석부만들기 위해서 필요
+    var sessionCount      = req.body.sessionCount
 
 
     var tempManager = new Array()
     var tempStudents = new Array()
-    var tempAttendance=[]
 
 
     // 매니저정보
@@ -1915,11 +1951,6 @@ router.post('/create/manager', (req, res, next)=>{
     }// for - 매니저정보
 
 
-    // 출석카운트 만들기
-    for(var ii=0;   ii<sessionCount;   ii++){
-        tempAttendance.push(0)
-    }
-    tempAttendance = String(tempAttendance)
 
 
 
@@ -1930,7 +1961,6 @@ router.post('/create/manager', (req, res, next)=>{
             students[ii].stu_phone,
             students[ii].stu_department==undefined ? '' : students[ii].stu_department,
             students[ii].stu_position==undefined ? '' : students[ii].stu_position,
-            tempAttendance,
             students[ii].com_code,
             lec_idx
         ])
@@ -2002,7 +2032,9 @@ router.post('/create/manager', (req, res, next)=>{
 
 
 })
-// ====== 신규강의 - 매니저&참여기업 : company_manager ====== //
+/* ========================================
+(O) 신규강의 - 매니저&참여기업 : company_manager
+======================================== */
 
 
 
@@ -2015,7 +2047,13 @@ router.post('/create/manager', (req, res, next)=>{
 
 
 
-// ====== (O)신규강의 - 그룹 등록 : group ====== //
+
+
+/* ========================================
+
+(O)신규강의 - 그룹 등록 : group
+
+======================================== */
 router.post('/create/group', (req, res, next)=>{
     var lec_idx    = req.body.lec_idx
     var da = req.body
@@ -2126,7 +2164,10 @@ router.post('/create/group', (req, res, next)=>{
     })// pool
 
 
-})// ====== 신규강의 - 그룹 등록 : group ====== //
+})
+/* ========================================
+(O)신규강의 - 그룹 등록 : group
+======================================== */
 
 
 
@@ -2136,7 +2177,16 @@ router.post('/create/group', (req, res, next)=>{
 
 
 
-// ====== (O)신규강의 - 수강생 등록 : registration ====== //
+
+
+
+
+
+/* ========================================
+
+(O)신규강의 - 수강생 등록 : registration
+
+======================================== */
 router.post('/create/aplterm', (req, res, next)=>{
     var flag = req.body.flag // 신규/수정 여부확인용 플래그
     var lec_idx    = req.body.lec_idx
@@ -2173,7 +2223,10 @@ router.post('/create/aplterm', (req, res, next)=>{
         res.status(200).send({ msg : 'success', data : result })
     })// conn
 
-})// ====== 신규강의 - 수강생 등록 : registration ====== //
+})
+/* ========================================
+(O)신규강의 - 수강생 등록 : registration
+======================================== */
 
 
 
@@ -2203,7 +2256,12 @@ router.post('/create/aplterm', (req, res, next)=>{
 
 
 
-// ====== (O)임시저장강의 목록 ====== //
+
+/* ========================================
+
+(O)임시저장강의 목록
+
+======================================== */
 router.get('/temp', (req, res, next)=>{
     let tid = req.user.user.tutor_idx;
     let q   = `

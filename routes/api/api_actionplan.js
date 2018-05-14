@@ -109,12 +109,25 @@ router.get('/detail/:lap_idx', isAuth, (req,res,next)=>{
 
 // ====== 그룹/부서/직급/성 별 ====== // => O
 router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
-    var tutor_idx   = req.user.user.tutor_idx; // 강사아이디
-    var lec_idx      = req.params.lec_idx // 강의아이디
-    var classification = req.params.classification // 분류 => 부서/직급
-    var value         = req.params.value // 찾을값
+    var tutor_idx           = req.user.user.tutor_idx; // 강사아이디
+    var lec_idx               = req.params.lec_idx // 강의아이디
+    var classification      = req.params.classification // 분류 => 부서/직급
+    var value                  = req.params.value // 찾을값
     var temp = ''
 
+    var _kpi          = req.query.kpi // 선택한 KPI
+    var params=[] // 추가쿼리
+    var kpiSQL='' // 추가쿼리
+
+    // 쿼리스트링이 있을경우
+    if (_kpi !== undefined  &&  _kpi !== null  &&  _kpi !== '') {
+        // console.log(_kpi);
+        kpiSQL = ` AND LAP.lk_idx = ?`
+        params = [value, _kpi, value, _kpi, lec_idx]
+    }else{
+        params = [value, value, lec_idx]
+    }
+    params.push(lec_idx) // 강의아이디 - 쿼리 파라미터 순서때문에 아래쪽에 작성
 
     switch (classification) {
         case 'personal': // 개인별 데이터 - 개인별 조회시 그룹바이 필요
@@ -159,6 +172,7 @@ router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
         			AND LAC.lac_date = LAD.lad_date
         			AND LAC.lac_flag = 'self'
                     AND `+temp+`
+                    `+kpiSQL+`
         	) as avgSelfScore,
         	(
         		SELECT
@@ -174,6 +188,7 @@ router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
         			AND LAC.lac_date = LAD.lad_date
         			AND LAC.lac_flag = 'others'
                     AND `+temp+`
+                    `+kpiSQL+`
         	) as avgOthersScore
 
         FROM
@@ -239,7 +254,7 @@ router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
         }
 
         // 부서/직급 별 액플런 찾기
-        connection.query(sql, [value, value, lec_idx], (err , departmentsResult)=>{
+        connection.query(sql, params, (err , departmentsResult)=>{
             if (err) {
                 connection.release()
                 console.log(err);
@@ -347,6 +362,7 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
         			AND LAP.lap_idx = LAC.lap_idx
         			AND LAC.lac_date = LAD.lad_date
         			AND LAC.lac_flag = 'self'
+                    AND LAC.lac_score <> 0
                     `+tempSQL+`
         	) as avgSelfScore,
         	(
@@ -362,6 +378,7 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
         			AND LAP.lap_idx = LAC.lap_idx
         			AND LAC.lac_date = LAD.lad_date
         			AND LAC.lac_flag = 'others'
+                    AND LAC.lac_score <> 0
                     `+tempSQL+`
         	) as avgOthersScore
 
@@ -735,27 +752,11 @@ router.get('/comments/:stu_idx', (req, res, next)=>{
 
     var sql = `
         SELECT
-        	LAP.lap_idx ,
-        	date_format(AC.ac_date, '%Y-%m-%d') as ac_date,
-        	AC.ac_img,
-        	AC.ac_flag,
-        	AC.ac_contents,
-	        R.stu_name,
-	        R.stu_gender
-
-        FROM
-        	lecture_action_plan LAP,
-        	acplearn_cheerup AC
-            LEFT JOIN registration R
-	        ON AC.stu_idx = R.stu_idx
-
-        WHERE
-        	LAP.stu_idx = ?
-            `+temp+`
-        	AND LAP.lap_idx = AC.lap_idx `
+        	* FROM acplearn_cheerup WHERE stu_idx=? `
 
     pool.getConnection((er, connection)=>{
         if (er) {
+            console.log(er);
             throw er
             return
         }
@@ -763,7 +764,9 @@ router.get('/comments/:stu_idx', (req, res, next)=>{
         connection.query(sql, params, (err, result)=>{
             connection.release()
             if (err) {
-                res.send(500, {result:'error'})
+                // console.log(err);
+                res.send(200, { comments:[] }) // 임시 데이터
+                // res.send(500, {result:'error'})
                 return
             }
 
