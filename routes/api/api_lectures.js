@@ -197,6 +197,7 @@ router.get('/detail/:id', (req, res, next)=>{
             	LS.ls_title,
             	LS.ls_location,
             	LS.ls_seq,
+            	LS.ls_timetableFlag,
                 date_format(LS.ls_aplDate, '%Y-%m-%d') as ls_aplDate,
                 date_format(LS.ls_startDate, '%Y-%m-%d')  as  ls_startDate,
                 date_format(LS.ls_endDate,   '%Y-%m-%d')  as  ls_endDate,
@@ -319,6 +320,7 @@ router.get('/detail/:id', (req, res, next)=>{
                         ls_title                 : lectureResult[ii].ls_title,
                         ls_location          : lectureResult[ii].ls_location,
                         ls_seq                 : lectureResult[ii].ls_seq,
+                        ls_timetableFlag : lectureResult[ii].ls_timetableFlag,
                         ls_startTime        : lectureResult[ii].ls_startTime,
                         ls_endTime         : lectureResult[ii].ls_endTime,
                         sessionClass        : []
@@ -1188,6 +1190,7 @@ router.post('/create/sessions', (req, res, next)=>{
             ls_startDate,
             ls_endDate,
             ls_aplDate,
+            ls_timetableFlag,
             ls_seq,
             lec_idx
         ) VALUES ?`
@@ -1267,7 +1270,8 @@ router.post('/create/sessions', (req, res, next)=>{
 
         // 강의 등록 or 업뎃
         connection.query(SQLlectureInsert, [
-            lec_idx, tempTitle,
+            lec_idx,
+            tempTitle,
             tempDateStart,
             tempDateEnd,
             tutor_idx,
@@ -1335,6 +1339,7 @@ router.post('/create/sessions', (req, res, next)=>{
                         tempDateStart,
                         tempDateEnd,
                         tempAplDate,
+                        sessions[ii].ls_timetableFlag,
                         // sessions[ii].ls_startDate,
                         // sessions[ii].ls_endDate,
                         // sessions[ii].ls_aplDate,
@@ -1683,7 +1688,7 @@ router.post('/create/timetable', (req, res, next)=>{
     var insertModuleSQL = "INSERT INTO  lecture_module( lm_title, lm_text, lm_startTime, lm_endTime, lm_type, lt_idx ) VALUES ?"
 
     // 세션정보 업데이트(제목, 시간)
-    var updateSessionSQL = "UPDATE lecture_session SET ls_title=?, ls_startTime=?, ls_endTime=?  WHERE ls_idx=?; "
+    var updateSessionSQL = "UPDATE lecture_session SET ls_title=?, ls_startTime=?, ls_endTime=?, ls_timetableFlag=?  WHERE ls_idx=?; "
 
 
     var tempSessions        = new Array() // 업데이트 데이터
@@ -1704,13 +1709,15 @@ router.post('/create/timetable', (req, res, next)=>{
         // 시간설정
         startTime = sessions.ls_startTime
         endTime  = sessions.ls_endTime
-
+        timetableFlag  = sessions.ls_timetableFlag
+        console.log("sessions.ls_timetableFlag : ",sessions.ls_timetableFlag);
 
         // 업데이트 데이터 - 일괄쿼리
         sessionsQ += mysql.format(updateSessionSQL, [
             sessions.ls_title,     // 세션제목
             startTime ? startTime : '',              // 시작시간
             endTime ? endTime : '',               // 종료시간
+            timetableFlag,
             sessions.ls_idx       // 세션아이디
         ])
 
@@ -1780,7 +1787,7 @@ router.post('/create/timetable', (req, res, next)=>{
                         return
                     }// if
 
-                    console.log('insertTimetablesResult.insertId : ' ,insertTimetablesResult.insertId);
+                    // console.log('insertTimetablesResult.insertId : ' ,insertTimetablesResult.insertId);
 
 
                     // 강의모듈 만들기
@@ -1788,7 +1795,7 @@ router.post('/create/timetable', (req, res, next)=>{
                         for(var jj  in  da.sessionDetail[ii].timetables){ // #2
                             for(var kk  in  da.sessionDetail[ii].timetables[jj].modules){// #3
                                 modules = da.sessionDetail[ii].timetables[jj].modules[kk]
-                                console.log(modules);
+                                // console.log(modules);
                                 tempModules.push([
                                     modules.lm_title,
                                     modules.lm_text,
