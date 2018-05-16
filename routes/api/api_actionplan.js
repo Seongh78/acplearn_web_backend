@@ -132,20 +132,20 @@ router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
     switch (classification) {
         case 'personal': // 개인별 데이터 - 개인별 조회시 그룹바이 필요
             temp  =  `
-            R.stu_idx=?
+            AND R.stu_idx=?
             GROUP BY LAP.lap_idx`
         break;
         case 'group': // 부서별 데이터
-            temp =  'R.group_idx=?'
+            temp =  'AND R.group_idx=?'
         break;
         case 'departments': // 부서별 데이터
-            temp =  'R.stu_department=?'
+            temp =  'AND R.stu_department=?'
         break;
         case 'position': // 직급별 데이터
-            temp =  'R.stu_position=?'
+            temp =  'AND R.stu_position=?'
         break;
         case 'gender': // 직급별 데이터
-            temp =  'R.stu_gender=?'
+            temp =  'AND R.stu_gender=?'
         break;
         default: // 컨텐츠 없음 - 요청에러
             res.send(204, {result: 'success - no contents'})
@@ -171,8 +171,8 @@ router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
         			AND LAP.lap_idx = LAC.lap_idx
         			AND LAC.lac_date = LAD.lad_date
         			AND LAC.lac_flag = 'self'
-                    AND `+temp+`
                     `+kpiSQL+`
+                    `+temp+`
         	) as avgSelfScore,
         	(
         		SELECT
@@ -187,8 +187,8 @@ router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
         			AND LAP.lap_idx = LAC.lap_idx
         			AND LAC.lac_date = LAD.lad_date
         			AND LAC.lac_flag = 'others'
-                    AND `+temp+`
                     `+kpiSQL+`
+                    `+temp+`
         	) as avgOthersScore
 
         FROM
@@ -219,7 +219,7 @@ router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
         			AND LK.lk_idx = LAP.lk_idx
         			AND LAP.lap_idx = LAC.lap_idx
         			AND LAC.lac_flag = 'self'
-                    AND  `+temp+`
+                     `+temp+`
         	) as avgSelfScore,
         	(
         		SELECT
@@ -233,7 +233,7 @@ router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
         			AND LK.lk_idx = LAP.lk_idx
         			AND LAP.lap_idx = LAC.lap_idx
         			AND LAC.lac_flag = 'others'
-                    AND  `+temp+`
+                     `+temp+`
         	) as avgOthersScore
 
         FROM
@@ -345,11 +345,12 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
     // console.log(params);
 
     // 전체 평균 점수데이터
+
     var sql = `
         SELECT
         	DATE_FORMAT(LAD.lad_date, '%Y-%m-%d') as originalDate,
         	DATE_FORMAT(LAD.lad_date, '%m/%d') as lad_date,
-        	(
+        	ROUND((
         		SELECT
         			AVG(LAC.lac_score)
         		FROM
@@ -364,8 +365,8 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
         			AND LAC.lac_flag = 'self'
                     AND LAC.lac_score <> 0
                     `+tempSQL+`
-        	) as avgSelfScore,
-        	(
+        	),1) as avgSelfScore,
+        	ROUND((
         		SELECT
         			AVG(LAC.lac_score)
         		FROM
@@ -380,17 +381,19 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
         			AND LAC.lac_flag = 'others'
                     AND LAC.lac_score <> 0
                     `+tempSQL+`
-        	) as avgOthersScore
+        	),1) as avgOthersScore
 
         FROM
-        	lecture_session LS,
-        	lecture_acplearn_day LAD
+        	lecture_session LS
+            INNER JOIN lecture_acplearn_day LAD
+	        ON LS.ls_idx = LAD.ls_idx
 
         WHERE
         	LS.lec_idx = ?
-        	AND LS.ls_idx = LAD.ls_idx
 
         GROUP BY lad_date`
+
+
 
     // KPI별 통계
     var kpiAvgSQL = `
