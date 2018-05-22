@@ -493,7 +493,7 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
 
     var sql =`
         SELECT
-        	LAD.lad_date as originalDate,
+        	DATE_FORMAT(LAD.lad_date, '%Y-%m-%d') as originalDate,
 	        DATE_FORMAT(LAD.lad_date, '%m/%d') as lad_date,
             ROUND(AVG(
         		case when LAC.lac_flag = 'self' and LAC.lac_score <> 0 then LAC.lac_score end
