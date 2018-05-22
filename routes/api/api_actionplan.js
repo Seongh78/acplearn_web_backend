@@ -123,20 +123,23 @@ router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
 
     // 쿼리스트링이 있을경우
     if (_kpi !== undefined  &&  _kpi !== null  &&  _kpi !== '') {
-        // console.log(_kpi);
+        console.log("_kpi : ",_kpi);
         kpiSQL = ` AND LAP.lk_idx = ?`
-        params = [ _kpi, value,  _kpi, value, lec_idx]
+        params = [  _kpi, value, lec_idx]
         beforAvgParams.push(_kpi)
     }else{
-        params = [value, value, lec_idx]
+        params = [ value, lec_idx]
     }
-    params.push(lec_idx) // 강의아이디 - 쿼리 파라미터 순서때문에 아래쪽에 작성
+    // params.push(lec_idx) // 강의아이디 - 쿼리 파라미터 순서때문에 아래쪽에 작성
+
+    console.log(params);
+
 
     switch (classification) {
         case 'personal': // 개인별 데이터 - 개인별 조회시 그룹바이 필요
             temp  =  `
             AND R.stu_idx=?
-            GROUP BY LAP.lap_idx`
+            -- GROUP BY LAP.lap_idx`
         break;
         case 'group': // 부서별 데이터
             temp =  'AND R.group_idx=?'
@@ -158,6 +161,42 @@ router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
 
 
     // 분류별 통계
+    var sql =  `
+        SELECT
+        	DATE_FORMAT(LAD.lad_date, '%Y-%m-%d') as originalDate,
+        	DATE_FORMAT(LAD.lad_date, '%m/%d') as lad_date,
+            ROUND(AVG(
+        		case when LAC.lac_flag = 'self' and LAC.lac_score <> 0 then LAC.lac_score end
+        	),1) as avgSelfScore,
+
+            ROUND(AVG(
+        		case when LAC.lac_flag = 'others' and LAC.lac_score <> 0 then LAC.lac_score end
+        	),1) as avgOthersScore
+
+        FROM
+        	lecture_session LS
+            INNER JOIN registration R
+            ON R.lec_idx = LS.lec_idx
+
+            INNER JOIN lecture_acplearn_day LAD
+            ON LAD.ls_idx = LS.ls_idx
+
+            LEFT JOIN lecture_action_plan LAP
+            ON LAP.ls_idx = LS.ls_idx
+            `+kpiSQL+`
+            `+temp+`
+            AND R.stu_idx = LAP.stu_idx 
+
+            LEFT JOIN lecture_acplearn_check LAC
+            ON LAC.lad_idx = LAD.lad_idx
+            AND LAC.lap_idx = LAP.lap_idx
+
+            WHERE
+            LS.lec_idx = ?
+
+            GROUP BY lad_date
+                `
+    /*
     var sql =  `
         SELECT
         	DATE_FORMAT(LAD.lad_date, '%m/%d') as lad_date,
@@ -205,7 +244,7 @@ router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
         	AND LS.ls_idx = LAD.ls_idx
 
         GROUP BY lad_date `
-
+        */
 
     // 사전점수 평균
     var beforeAvgSQL = `
@@ -512,7 +551,7 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
             ON LAC.lad_idx = LAD.lad_idx
 
             WHERE
-            LS.lec_idx = 24
+            LS.lec_idx = ?
 
             GROUP BY lad_date
             `
