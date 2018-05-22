@@ -185,7 +185,7 @@ router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
             ON LAP.ls_idx = LS.ls_idx
             `+kpiSQL+`
             `+temp+`
-            AND R.stu_idx = LAP.stu_idx 
+            AND R.stu_idx = LAP.stu_idx
 
             LEFT JOIN lecture_acplearn_check LAC
             ON LAC.lad_idx = LAD.lad_idx
@@ -795,46 +795,34 @@ router.get('/personal/:lec_idx/:stu_idx', (req, res, next)=>{
     // 개인 전체플랜 평균점수
     var studentAvgSQL = `
         SELECT
+        	DATE_FORMAT(LAD.lad_date, '%Y-%m-%d') as originalDate,
         	DATE_FORMAT(LAD.lad_date, '%m/%d') as lad_date,
-        	(
-        		SELECT
-        			AVG(LAC.lac_score)
-        		FROM
-        			registration R,
-        			lecture_action_plan LAP,
-        			lecture_acplearn_check LAC
-        		WHERE
-        			R.lec_idx = LS.lec_idx
-        			AND R.stu_idx = LAP.stu_idx
-        			AND LAP.lap_idx = LAC.lap_idx
-        			AND LAC.lac_date = LAD.lad_date
-        			AND LAC.lac_flag = 'self'
-        			AND R.stu_idx=LAD.stu_idx
-        	) as avgSelfScore,
-        	(
-        		SELECT
-        			AVG(LAC.lac_score)
-        		FROM
-        			registration R,
-        			lecture_action_plan LAP,
-        			lecture_acplearn_check LAC
-        		WHERE
-        			R.lec_idx = LS.lec_idx
-        			AND R.stu_idx = LAP.stu_idx
-        			AND LAP.lap_idx = LAC.lap_idx
-        			AND LAC.lac_date = LAD.lad_date
-        			AND LAC.lac_flag = 'others'
-        			AND R.stu_idx=LAD.stu_idx
-        	) as avgOthersScore
+            ROUND(AVG(
+        		case when LAC.lac_flag = 'self' and LAC.lac_score <> 0 then LAC.lac_score end
+        	),1) as avgSelfScore,
+
+            ROUND(AVG(
+        		case when LAC.lac_flag = 'others' and LAC.lac_score <> 0 then LAC.lac_score end
+        	),1) as avgOthersScore
 
         FROM
-        	lecture_session LS,
-        	lecture_acplearn_day LAD
+        	lecture_session LS
 
-        WHERE
-        	LS.lec_idx = ?
-        	AND LAD.stu_idx = ?
-        	AND LS.ls_idx = LAD.ls_idx`
+            INNER JOIN lecture_acplearn_day LAD
+            ON LAD.ls_idx = LS.ls_idx
+
+            LEFT JOIN lecture_action_plan LAP
+            ON LAP.ls_idx = LS.ls_idx
+            AND LAP.stu_idx = ?
+
+            LEFT JOIN lecture_acplearn_check LAC
+            ON LAC.lad_idx = LAD.lad_idx
+            AND LAC.lap_idx = LAP.lap_idx
+
+            WHERE
+            LS.lec_idx = ?
+
+            GROUP BY lad_date `
 
     // 플랜별 점수
     var planAvgSQL = `
@@ -847,24 +835,24 @@ router.get('/personal/:lec_idx/:stu_idx', (req, res, next)=>{
         		SELECT AVG(LAC.lac_score)
         		FROM lecture_acplearn_check LAC
         		WHERE
-        			LAC.lap_idx = LAP.lap_idx
-        			AND LAC.lac_date = LAD.lad_date
+					LAC.lad_idx = LAD.lad_idx
         			AND LAC.lac_flag = 'self'
+                    AND LAC.lac_score <> 0
         	) as avgSelfScore,
-        	(
+            (
         		SELECT AVG(LAC.lac_score)
         		FROM lecture_acplearn_check LAC
         		WHERE
-        			LAC.lap_idx = LAP.lap_idx
-        			AND LAC.lac_date = LAD.lad_date
+					LAC.lad_idx = LAD.lad_idx
         			AND LAC.lac_flag = 'others'
+                    AND LAC.lac_score <> 0
         	) as avgOthersScore
 
         FROM
-            capability_category2 CC2,
-	        lecture_kpi LK,
-        	lecture_action_plan LAP,
-        	lecture_acplearn_day LAD
+            capability_category2 CC2
+	        INNER JOIN lecture_kpi LK
+        	INNER JOIN lecture_action_plan LAP
+        	INNER JOIN lecture_acplearn_day LAD
 
         WHERE
         	LAP.stu_idx = ?
@@ -881,7 +869,7 @@ router.get('/personal/:lec_idx/:stu_idx', (req, res, next)=>{
         }
 
         // 누적 평균점수
-        connection.query(kpiAvgSQL , [stu_idx, lec_idx], (kpiAvgErr, kpiAvgResult)=>{
+        connection.query(kpiAvgSQL , [lec_idx, stu_idx], (kpiAvgErr, kpiAvgResult)=>{
             if (kpiAvgErr) {
                 console.log(kpiAvgErr);
                 connection.release()
@@ -889,7 +877,7 @@ router.get('/personal/:lec_idx/:stu_idx', (req, res, next)=>{
                 return
             }
             // 전체플랜 평균점수
-            connection.query(studentAvgSQL , [lec_idx, stu_idx], (studentAvgErr, studentAvgResult)=>{
+            connection.query(studentAvgSQL , [stu_idx, lec_idx], (studentAvgErr, studentAvgResult)=>{
                 if (studentAvgErr) {
                     console.log(studentAvgErr);
                     connection.release()
