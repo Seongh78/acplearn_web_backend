@@ -229,7 +229,15 @@ router.get('/detail/:id', (req, res, next)=>{
 					SELECT COUNT(*)
                     FROM lecture_comment LC
                     WHERE LM.lm_idx = LC.lm_idx AND LC.lc_text <> ''
-                ) as lm_imgCount
+                ) as lm_imgCount,
+
+                LC.lc_idx,
+                LC.stu_idx,
+                LC.lc_flag,
+                LC.lc_date,
+                LC.lc_text,
+                LC.lc_img,
+                R.stu_name
 
             FROM
                 lecture L
@@ -241,8 +249,12 @@ router.get('/detail/:id', (req, res, next)=>{
                     ON LSC.lsc_idx =LT.lsc_idx
                 LEFT JOIN lecture_module LM
                     ON LT.lt_idx = LM.lt_idx
+                LEFT JOIN lecture_comment LC
+                	ON LM.lm_idx=LC.lm_idx
+            	LEFT join registration R
+            		ON LC.stu_idx = R.stu_idx
             WHERE
-                L.lec_idx=? and L.tutor_idx=?`
+                L.lec_idx=? and L.tutor_idx=? `
     }// q
 
     var lecture;
@@ -256,6 +268,7 @@ router.get('/detail/:id', (req, res, next)=>{
     var tempClass = []
     var tempTimetables = []
     var tempModules = []
+    var tempComments = []
 
      // 현재 돌고있는 차시의 배열 - 차시가 push될 때 차시의 번지수를 기억함
     var sessionCount            = -1,
@@ -383,13 +396,33 @@ router.get('/detail/:id', (req, res, next)=>{
                         lm_teacher          : lectureResult[ii].lm_teacher,
                         lm_textCount      : lectureResult[ii].lm_textCount,
                         lm_imgCount      : lectureResult[ii].lm_imgCount,
-                        lm_type                : lectureResult[ii].lm_type
+                        lm_type                : lectureResult[ii].lm_type,
+                        comments            : []
                     }
                     if (tempModules.length<1) {
                         tempModules.push(lm)
                     }else{
                         if (lectureResult[ii-1].lm_idx  != lectureResult[ii].lm_idx)
                             tempModules.push(lm)
+                    }
+                }
+
+                // 강의코멘트
+                if(lectureResult[ii].lc_idx != null){
+                    var lc = {
+                        lm_idx          : lectureResult[ii].lm_idx,
+                        lc_idx            : lectureResult[ii].lc_idx,
+                        stu_idx          : lectureResult[ii].stu_idx,
+                        lc_flag           : lectureResult[ii].lc_flag,
+                        lc_date          : lectureResult[ii].lc_date,
+                        lc_text           : lectureResult[ii].lc_text,
+                        lc_img           : lectureResult[ii].lc_img,
+                    }
+                    if (tempComments.length<1) {
+                        tempComments.push(lc)
+                    }else{
+                        if (lectureResult[ii-1].lc_idx  != lectureResult[ii].lc_idx)
+                            tempComments.push(lc)
                     }
                 }
 
@@ -411,7 +444,7 @@ router.get('/detail/:id', (req, res, next)=>{
 
 
 
-            var sleng, cleng, tleng, mleng;
+            var sleng, cleng, tleng, mleng, cmleng;
             for(var sid  in  tempSessions){ // tempSessions
 
                 for(var cid  in tempClass){ // tempClass
@@ -427,6 +460,15 @@ router.get('/detail/:id', (req, res, next)=>{
                                 for(var mid  in  tempModules){ // tempModules
                                     if (tempSessions[sid].sessionClass[cleng].timetables[tleng].lt_idx  ===  tempModules[mid].lt_idx){
                                         tempSessions[sid].sessionClass[cleng].timetables[tleng].modules.push(tempModules[mid])
+
+                                        mleng = tempSessions[sid].sessionClass[cleng].timetables[tleng].modules.length-1
+                                        for(var cmid  in  tempComments){ // tempModules
+                                            if (tempSessions[sid].sessionClass[cleng].timetables[tleng].modules[mleng].lm_idx  ===  tempComments[cmid].lm_idx){
+                                                console.log(tempComments[cmid]);
+                                                tempSessions[sid].sessionClass[cleng].timetables[tleng].modules[mleng].comments.push(tempComments[cmid])
+                                            }
+                                        } // tempModules
+
                                     }
                                 } // tempModules
 
