@@ -309,7 +309,6 @@ router.get('/score2/:lec_idx/:classification', (req, res, next)=>{
         WHERE
         	LS.lec_idx = ? `
 
-
     // === 사전점수 평균 === //
     var beforeAvgSQL = `
         SELECT
@@ -358,27 +357,50 @@ router.get('/score2/:lec_idx/:classification', (req, res, next)=>{
                     }
 
 
+                    var classificationArray = [] // 분류별 임시 데이터
+                    var classificationKpiArray = [] // kpi 임시 데이터
+                    var avgBeforeScore
+                    var keys = Object.keys(classificationResult)
+                    // 분류 찾기
+                    for(var ii   in  keys){
+                        classificationKpiArray=[]
+                        avgBeforeScore = 0
+                        if (ii < 1) {
+                            // KPI 평균 찾기
+                            for(var jj  in  kpiAvgResult){
+                                if(kpiAvgResult[jj].classification == classificationResult[ii].classification)
+                                    classificationKpiArray.push({ // KPI별 통계
+                                        cc2_name                : kpiAvgResult[jj].cc2_name,
+                                        lk_idx                       : kpiAvgResult[jj].lk_idx,
+                                        avgBeforeScore       : kpiAvgResult[jj].avgBeforeScore,
+                                        avgSelfScore            : kpiAvgResult[jj].avgSelfScore,
+                                        avgOthersScore       : kpiAvgResult[jj].avgOthersScore,
+                                    })
+                            }
+                            // 실 데이터
+                            classificationArray.push({
+                                'title' : classificationResult[ii].classification,
+                                avgBeforeScore:0,
+                                kpiAvg: classificationKpiArray,
+                                participationSelfDay:0,
+                                participationOthersDay:0,
+                                participationSelfRate:0,
+                                participationOthersRate:0,
+                                'score' : []
+                            })
 
-
-
-                        var classificationArray = [] // 분류별 임시 데이터
-                        var classificationKpiArray = [] // kpi 임시 데이터
-                        var avgBeforeScore
-                        var keys = Object.keys(classificationResult)
-                        // 분류 찾기
-                        for(var ii   in  keys){
-                            classificationKpiArray=[]
-                            avgBeforeScore = 0
-                            if (ii < 1) {
+                            // console.log(classificationArray);
+                        }else{
+                            if (classificationResult[ii].classification !== classificationArray[classificationArray.length-1].title) {
                                 // KPI 평균 찾기
-                                for(var jj  in  kpiAvgResult){
+                                for(var jj  in  kpiAvgResult){ // KPI별 통계
                                     if(kpiAvgResult[jj].classification == classificationResult[ii].classification)
-                                        classificationKpiArray.push({ // KPI별 통계
-                                            cc2_name                : kpiAvgResult[jj].cc2_name,
-                                            lk_idx                       : kpiAvgResult[jj].lk_idx,
-                                            avgBeforeScore       : kpiAvgResult[jj].avgBeforeScore,
-                                            avgSelfScore            : kpiAvgResult[jj].avgSelfScore,
-                                            avgOthersScore       : kpiAvgResult[jj].avgOthersScore,
+                                        classificationKpiArray.push({
+                                            cc2_name : kpiAvgResult[jj].cc2_name,
+                                            lk_idx : kpiAvgResult[jj].lk_idx,
+                                            avgBeforeScore : kpiAvgResult[jj].avgBeforeScore,
+                                            avgSelfScore : kpiAvgResult[jj].avgSelfScore,
+                                            avgOthersScore : kpiAvgResult[jj].avgOthersScore,
                                         })
                                 }
                                 // 실 데이터
@@ -391,92 +413,62 @@ router.get('/score2/:lec_idx/:classification', (req, res, next)=>{
                                     participationSelfRate:0,
                                     participationOthersRate:0,
                                     'score' : []
-                                })
+                                })// push
+                            }
+                        }// else
+                    }// for
 
-                                // console.log(classificationArray);
-                            }else{
-                                if (classificationResult[ii].classification !== classificationArray[classificationArray.length-1].title) {
-                                    // KPI 평균 찾기
-                                    for(var jj  in  kpiAvgResult){ // KPI별 통계
-                                        if(kpiAvgResult[jj].classification == classificationResult[ii].classification)
-                                            classificationKpiArray.push({
-                                                cc2_name : kpiAvgResult[jj].cc2_name,
-                                                lk_idx : kpiAvgResult[jj].lk_idx,
-                                                avgBeforeScore : kpiAvgResult[jj].avgBeforeScore,
-                                                avgSelfScore : kpiAvgResult[jj].avgSelfScore,
-                                                avgOthersScore : kpiAvgResult[jj].avgOthersScore,
-                                            })
-                                    }
-                                    // 실 데이터
-                                    classificationArray.push({
-                                        'title' : classificationResult[ii].classification,
-                                        avgBeforeScore:0,
-                                        kpiAvg: classificationKpiArray,
-                                        participationSelfDay:0,
-                                        participationOthersDay:0,
-                                        participationSelfRate:0,
-                                        participationOthersRate:0,
-                                        'score' : []
-                                    })// push
+
+
+                    // 점수데이터 삽입
+                    var allAvg = 0
+                    var participationSelfRate = 0  // 참여율
+                    var participationOthersRate = 0  // 참여율
+                    var participationDay = 0 // 참여일
+                    // var acplearnDay =  // 총 일수
+
+                    // 출력데이터 만들기
+                    for(var ii  in  classificationArray){
+                        for(var jj  in  keys){
+                            if (classificationArray[ii].title == classificationResult[jj].classification) {
+
+                                // 자가 - 참여일
+                                if (classificationResult[jj].avgSelfScore != null){
+                                    classificationArray[ii].participationSelfDay+=1
                                 }
-                            }// else
+
+                                // 팀원 - 참여일
+                                if (classificationResult[jj].avgOthersScore != null){
+                                    classificationArray[ii].participationOthersDay+=1
+                                }
+
+                                classificationArray[ii].score.push({
+                                    'lad_date' : classificationResult[jj].lad_date,
+                                    'originalDate' : classificationResult[jj].originalDate,
+                                    'avgSelfScore' : classificationResult[jj].avgSelfScore,
+                                    'avgOthersScore' : classificationResult[jj].avgOthersScore
+                                })//
+
+                            }// if
                         }// for
+                    }// for
 
 
-                        // 점수데이터 삽입
-                        var allAvg = 0
-                        var participationSelfRate = 0  // 참여율
-                        var participationOthersRate = 0  // 참여율
-                        var participationDay = 0 // 참여일
-                        // var acplearnDay =  // 총 일수
+                    // 참여율 구하기
+                    for(var ii  in  classificationArray){
+                        console.log(classificationArray[ii].score.length);
+                        classificationArray[ii].participationSelfRate = Number(((classificationArray[ii].participationSelfDay * 100) / classificationArray[ii].score.length).toFixed(1))
+                        classificationArray[ii].participationOthersRate = Number(((classificationArray[ii].participationOthersDay * 100) / classificationArray[ii].score.length).toFixed(1))
+                    }
 
-
-                        for(var ii  in  classificationArray){
-                            for(var jj  in  keys){
-                                if (classificationArray[ii].title == classificationResult[jj].classification) {
-
-                                    // 자가 - 참여일
-                                    if (classificationResult[jj].avgSelfScore != null)
-                                        classificationArray[ii].participationSelfDay+=1
-
-                                    // 팀원 - 참여일
-                                    if (classificationResult[jj].avgOthersScore != null)
-                                        classificationArray[ii].participationOthersDay+=1
-
-                                    classificationArray[ii].score.push({
-                                        'lad_date' : classificationResult[jj].lad_date,
-                                        'originalDate' : classificationResult[jj].originalDate,
-                                        'avgSelfScore' : classificationResult[jj].avgSelfScore,
-                                        'avgOthersScore' : classificationResult[jj].avgOthersScore
-                                    })
-
-
-                                }// if
-                            }// for
-                        }// for
-
-
-                        // 참여율 구하기
-                        for(var ii  in  classificationArray){
-                            console.log(classificationArray[ii].score.length);
-                            classificationArray[ii].participationSelfRate = Number(((classificationArray[ii].participationSelfDay * 100) / classificationArray[ii].score.length).toFixed(1))
-                            classificationArray[ii].participationOthersRate = Number(((classificationArray[ii].participationOthersDay * 100) / classificationArray[ii].score.length).toFixed(1))
-                        }
-
-
-
-                        connection.release()
-                        res.send(200, {
-                            // participationRateResult,
-                            // participationSelfRate,
-                            // participationOthersRate,
-                            avgBeforeScore     : beforeAvgResult[0].avgBeforeScore,
-                            classificationArray,
-
-                        })
-
-
-
+                    connection.release()
+                    res.send(200, {
+                        // participationRateResult,
+                        // participationSelfRate,
+                        // participationOthersRate,
+                        avgBeforeScore     : beforeAvgResult[0].avgBeforeScore,
+                        classificationArray,
+                    })
 
 
                 })// 사전점수 평균
@@ -704,7 +696,6 @@ router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
 
         GROUP BY LK.lk_idx `
 
-
     // 참여율
     var participationRateSQL = `
         SELECT
@@ -845,11 +836,11 @@ router.get('/score/:lec_idx/:classification/:value', (req, res, next)=>{
 
 
 
-/* ================
+/* ==================
 
 전체평균
 
-================ */
+================== */
 router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
     var tutor_idx   = req.user.user.tutor_idx; // 강사아이디
     var lec_idx      = req.params.lec_idx // 강의아이디
@@ -920,7 +911,6 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
 			LS.lec_idx = ?
             `+tempSQL
 
-
     // KPI별 통계
     var kpiAvgSQL = `
         -- KPI별 통계
@@ -948,7 +938,6 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
 
         WHERE LK.lec_idx = ?
         GROUP BY LK.lk_idx `
-
 
     // 참여율
     var participationRateSQL = `
@@ -978,7 +967,7 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
             `+tempSQL2+`
 
         WHERE
-        	LS.lec_idx = ? `
+        	LS.lec_idx = ?   `
 
 
     // Pool
@@ -1088,7 +1077,11 @@ router.get('/score/:lec_idx', isAuth, (req, res, next)=>{
 
 
 
-// ====== 개별 통계 데이터 ====== //
+/* ==================
+
+개별 통계 데이터
+
+================== */
 router.get('/personal/:lec_idx/:stu_idx', (req, res, next)=>{
     var lec_idx = req.params.lec_idx // 강의아이디
     var stu_idx = req.params.stu_idx // 수강생 아이디
@@ -1179,6 +1172,7 @@ router.get('/personal/:lec_idx/:stu_idx', (req, res, next)=>{
         SELECT
         	LAP.lap_idx,
             LAP.lap_text,
+            LAP.lap_beforeScore,
         	LAD.lad_idx,
             LAD.lad_activeFlag,
             LK.lk_idx,
@@ -1221,7 +1215,7 @@ router.get('/personal/:lec_idx/:stu_idx', (req, res, next)=>{
         }
 
         // 누적 평균점수
-        connection.query(kpiAvgSQL , [lec_idx, stu_idx], (kpiAvgErr, kpiAvgResult)=>{
+        connection.query(kpiAvgSQL , [stu_idx, lec_idx], (kpiAvgErr, kpiAvgResult)=>{
             if (kpiAvgErr) {
                 console.log(kpiAvgErr);
                 connection.release()
@@ -1246,39 +1240,84 @@ router.get('/personal/:lec_idx/:stu_idx', (req, res, next)=>{
                         return
                     }
 
+
+                    // 플랜목록 만들기
                     var plans = []
+                    var plan = {}
                     for(var ii  in  planAvgResult){
+                        plan = {
+                            lap_idx                             : planAvgResult[ii].lap_idx,
+                            lap_text                           : planAvgResult[ii].lap_text,
+                            lap_beforeScore              : planAvgResult[ii].lap_beforeScore,
+                            cc2_name                        : planAvgResult[ii].cc2_name,
+                            selfAvg                             : 0, // 자가평균
+                            othersAvg                        : 0, // 팀원평균
+                            progressRate                    : 0, // 진도율
+                            participationSelfDay        : 0, // 참여일수 - self
+                            participationOthersDay   : 0, // 참여일수 - others
+                            participationSelfRate       : 0, // 참여율 - self
+                            participationOthersRate  : 0, // 참여율 - others
+                            score : []
+                        }
                         if (ii == 0) {
-                            plans.push({
-                                lap_idx : planAvgResult[ii].lap_idx,
-                                lap_text : planAvgResult[ii].lap_text,
-                                cc2_name : planAvgResult[ii].cc2_name,
-                                score : []
-                            })
+                            plans.push(plan)
                         }else{
                             if (planAvgResult[ii-1].lap_idx != planAvgResult[ii].lap_idx) {
-                                plans.push({
-                                    lap_idx : planAvgResult[ii].lap_idx,
-                                    lap_text : planAvgResult[ii].lap_text,
-                                    cc2_name : planAvgResult[ii].cc2_name,
-                                    score : []
-                                })
+                                plans.push(plan)
                             }
                         }// else
-
                     }// for
+
+
+                    // 플랜별 점수데이터 만들기
+                    var progressDay = 0
+                    var progressCompleteDay = 0
 
                     for(var ii  in  plans){
                         for(var jj  in  planAvgResult){
+                            // console.log(planAvgResult[jj].lap_activeFlag);
                             if (plans[ii].lap_idx === planAvgResult[jj].lap_idx) {
                                 // 해당 플랜의 점수를 찾아서 푸시
                                 plans[ii].score.push({
                                     avgSelfScore        : planAvgResult[jj].avgSelfScore,
                                     avgOthersScore   : planAvgResult[jj].avgOthersScore,
+                                    lad_activeFlag      : planAvgResult[jj].lad_activeFlag,
                                     lad_date               : planAvgResult[jj].lad_date
                                 })
-                            }
+
+                                // 참여일수, 진행률 구하기
+                                if (planAvgResult[jj].lad_activeFlag != '휴식') {
+                                    // 진행률
+                                    progressDay++
+                                    if (planAvgResult[jj].lad_activeFlag=='완료') {
+                                        progressCompleteDay++
+                                    }
+                                    if (planAvgResult[jj].avgSelfScore != null ){
+                                        plans[ii].selfAvg += planAvgResult[jj].avgSelfScore
+                                        plans[ii].participationSelfDay ++
+                                    }
+                                    if (planAvgResult[jj].avgOthersScore != null){
+                                        plans[ii].othersAvg += planAvgResult[jj].avgOthersScore
+                                        plans[ii].participationOthersDay ++
+                                     }
+                                }
+
+                            }// if
                         }// for
+
+                        // 참여율
+                        plans[ii].participationSelfRate       = ((plans[ii].participationSelfDay*100)       / plans[ii].score.length).toFixed(1)
+                        plans[ii].participationOthersRate  = ((plans[ii].participationOthersDay*100)  / plans[ii].score.length).toFixed(1)
+                        // 평균
+                        plans[ii].selfAvg       = Number((plans[ii].selfAvg / plans[ii].participationSelfDay).toFixed(1))
+                        plans[ii].othersAvg  = Number((plans[ii].othersAvg / plans[ii].participationOthersDay).toFixed(1))
+                        // 진도율
+                        plans[ii].progressRate  = Number(((progressCompleteDay*100) / progressDay).toFixed(1))
+
+                        // 초기화
+                        progressDay = 0
+                        progressCompleteDay = 0
+
                     }// for
 
                     res.send(200, {
@@ -1295,6 +1334,19 @@ router.get('/personal/:lec_idx/:stu_idx', (req, res, next)=>{
 
 })
 // ====== 개별 통계 데이터 ====== //
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
